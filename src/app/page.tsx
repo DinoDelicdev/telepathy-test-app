@@ -3,8 +3,10 @@ import Image from "next/image";
 
 export default function Home() {
   return (
-    <div className="flex justify-center items-center h-screen w-screen">
-      <Button variant={"outline"}>Click ME</Button>HY THERE
+    <div className="flex flex-col gap-6 justify-center items-center h-screen w-screen">
+      <h1 className="text-2xl">SIMPLE TELEPATHY TEST</h1>
+
+      <Button variant={"outline"}>Click ME</Button>
     </div>
   );
 }
