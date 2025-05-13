@@ -1,11 +1,20 @@
-import { Button } from "@/components/ui/button";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col gap-6 justify-center items-center h-screen w-screen">
-      <h1 className="text-2xl">SIMPLE TELEPATHY TEST</h1>
+  const [roomId, setRoomId] = useState("");
+  const router = useRouter();
 
-      <Button variant={"outline"}>Click ME</Button>
-    </div>
+  return (
+    <main style={{ padding: 40 }}>
+      <h1>Enter a Room ID</h1>
+      <input type="text" placeholder="room123" value={roomId} onChange={(e) => setRoomId(e.target.value)} style={{ marginRight: 10 }} />
+      <button onClick={() => router.push(`/sender/${roomId}`)}>Sender</button>
+      <button onClick={() => router.push(`/receiver/${roomId}`)} style={{ marginLeft: 10 }}>
+        Receiver
+      </button>
+    </main>
   );
 }

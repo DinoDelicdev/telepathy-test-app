@@ -1,24 +1,45 @@
 "use client";
+import { useEffect, useState } from "react";
+import Pusher from "pusher-js";
 
-import { useEffect } from "react";
-import io from "socket.io-client";
+const Home = () => {
+  const [buttonClicked, setButtonClicked] = useState<string | null>(null);
 
-export default function Home() {
   useEffect(() => {
-    const socket = io();
+    const pusher = new Pusher("af85db0ecd23f6502c1b", {
+      cluster: "eu",
+    });
 
-    socket.on("connect", () => {
-      console.log("Connected to server");
+    const channel = pusher.subscribe("room-123");
+
+    channel.bind("button-clicked", function (data: { button: string }) {
+      setButtonClicked(data.button);
     });
 
     return () => {
-      socket.disconnect();
+      pusher.unsubscribe("room-123");
     };
   }, []);
 
+  const handleButtonClick = async (button: string) => {
+    // Send the button click event to the API
+    await fetch("/api/pusher", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ room: "room-123", buttonClicked: button }),
+    });
+  };
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <h1 className="text-4xl font-bold">WebSocket Test</h1>
-    </main>
+    <div>
+      <button onClick={() => handleButtonClick("button1")}>Click Button 1</button>
+      <button onClick={() => handleButtonClick("button2")}>Click Button 2</button>
+      <button onClick={() => handleButtonClick("button3")}>Click Button 3</button>
+      <button onClick={() => handleButtonClick("button4")}>Click Button 4</button>
+
+      {buttonClicked && <p>Button clicked: {buttonClicked}</p>}
+    </div>
   );
-}
+};
+
+export default Home;
