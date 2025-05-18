@@ -9,12 +9,22 @@ import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export default function Home() {
-  // const [roomId, setRoomId] = useState("");
   const router = useRouter();
   const [roomNumber, setRoomNumber] = useState(Math.floor(Math.random() * 1000000));
   const [roomCode, setRoomCode] = useState("");
 
   console.log(roomNumber);
+  const handleProceedingToUsersRoom = () => {
+    router.push(`/${roomNumber}`);
+  };
+
+  const handleProceedingToOtherPlayerRoom = () => {
+    if (roomCode.length < 6) {
+      console.log("Room code must have at least 6 numbers");
+    } else {
+      router.push(`${roomCode}`);
+    }
+  };
 
   return (
     <main className="h-screen flex flex-col bg-amber-50 p-4 justify-center items-center gap-6">
@@ -32,7 +42,7 @@ export default function Home() {
       <p className="text-center">Your room code is:</p>
       <p className="text-3xl font-bold text-center">{roomNumber}</p>
       <div className="flex justify-center">
-        <Button>Proceed To Your Room</Button>
+        <Button onClick={handleProceedingToUsersRoom}>Proceed To Your Room</Button>
       </div>
       <p className="text-center">--Or Enter Telephaty Friend Room Name--</p>
       <InputOTP pattern={REGEXP_ONLY_DIGITS} maxLength={6} value={roomCode} onChange={(roomCode) => setRoomCode(roomCode)}>
@@ -47,7 +57,7 @@ export default function Home() {
       </InputOTP>
 
       <div className="flex justify-center">
-        <Button onClick={() => console.log(roomCode)}>Proceed To Your Room</Button>
+        <Button onClick={handleProceedingToOtherPlayerRoom}>Proceed To Friends Room</Button>
       </div>
     </main>
   );
