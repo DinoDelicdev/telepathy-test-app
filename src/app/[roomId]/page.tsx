@@ -2,10 +2,10 @@
 
 import { useParams } from "next/navigation";
 import React, { useEffect, useState, useRef } from "react";
-import { Spinner } from "@/components/ui/spinner";
 import JoiningRoom from "@/components/joiningRoom/JoiningRoom";
 import WaitingSecondPlayerInTheRoom from "@/components/waitingSecondPlayerInTheRoom/WaitingSecondPlayerInTheRoom";
 import StartGamePrompt from "@/components/startGamePrompt/StartGamePrompt";
+import pusherClient from "@/utils/pusherFrontendClient";
 
 const RoomEntryPage = () => {
   const { roomId } = useParams();
@@ -14,21 +14,21 @@ const RoomEntryPage = () => {
 
   useEffect(() => {
     if (!hasEntered.current) {
-      // Notify the server that a user has entered the room
       fetch(`/api/room/${roomId}/enter`, { method: "POST" });
       hasEntered.current = true;
     }
 
-    // Connect to the SSE endpoint
-    const eventSource = new EventSource(`/api/room/${roomId}/sse`);
+    const channel = pusherClient.subscribe(`room-${roomId}`);
 
-    eventSource.onmessage = (event) => {
-      const data = JSON.parse(event.data);
+    channel.bind("user-count-updated", (data: { userCount: number }) => {
+      console.log("DATA");
       setUserCount(data.userCount);
-    };
+    });
 
     return () => {
-      eventSource.close();
+      channel.unbind_all();
+      channel.unsubscribe();
+      // pusherClient.disconnect();
     };
   }, [roomId]);
 

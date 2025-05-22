@@ -1,24 +1,25 @@
-// src/app/api/room/[roomId]/enter/route.ts
 import { NextRequest, NextResponse } from "next/server";
+import pusher from "@/utils/pusherBackendClient";
 import redis from "@/utils/redisClient";
 
-export async function POST(req: NextRequest) {
-  const roomId = req.nextUrl.pathname.split("/")[3];
+export async function POST(req: NextRequest, context: { params: { roomId: string } }) {
+  const { params } = context; // Await params here
+  const roomId = params.roomId;
 
+  console.log("EVO ME");
+  console.log(roomId);
   if (!roomId) {
-    return NextResponse.json({ error: "Room ID is required" }, { status: 400 });
+    return NextResponse.json({ error: "Missing roomId" }, { status: 400 });
   }
 
-  // Get the current user count and ensure it's a number
-  const currentUserCount = parseInt((await redis.get(`room:${roomId}:userCount`)) || "0", 10);
-
-  // Check if the room is full
-  if (currentUserCount >= 2) {
-    return NextResponse.json({ error: "Room is full" }, { status: 403 });
-  }
-
-  // Increment the user count in Redis
+  // Increment user count in Redis
   const userCount = await redis.incr(`room:${roomId}:userCount`);
+
+  // Optionally, set an expiry so empty rooms are cleaned up
+  await redis.expire(`room:${roomId}:userCount`, 3600);
+
+  // Notify all clients in the room via Pusher
+  await pusher.trigger(`room-${roomId}`, "user-count-updated", { userCount });
 
   return NextResponse.json({ userCount });
 }
