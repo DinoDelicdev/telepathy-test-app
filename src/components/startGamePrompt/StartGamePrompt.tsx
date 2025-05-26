@@ -55,13 +55,30 @@ const StartGamePrompt: React.FC<JoiningRoomPropType> = ({ roomId }) => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const router = useRouter();
 
-  // Listen for SSE events
+  interface GameDataType {
+    id: string;
+    roomId: string;
+    gameType: string;
+    player1: { id: string; role: null | string };
+    player2: { id: string; role: null | string };
+  }
+
   useEffect(() => {
     const channel = pusherClient.subscribe(`room-${roomId}`);
 
-    channel.bind("game-started", (data: { gameId: string; gameType: string }) => {
+    channel.bind("game-started", (gameData: GameDataType) => {
       console.log("Data AGAIN");
-      router.push(`/game/${data.gameId}`);
+      console.log(gameData);
+      localStorage.setItem("current_game_roomId", gameData.roomId);
+      if (gameData.roomId === localStorage.getItem("usersRoomId")) {
+        console.log("I am the PLAYER 1");
+        localStorage.setItem("telephaty_player_id", gameData.player1.id);
+      } else {
+        localStorage.setItem("telephaty_player_id", gameData.player2.id);
+      }
+
+      // channel.unsubscribe();
+      router.push(`/game/${gameData.id}/role-selection`);
     });
 
     return () => {
@@ -76,13 +93,20 @@ const StartGamePrompt: React.FC<JoiningRoomPropType> = ({ roomId }) => {
 
   const handleProceed = async () => {
     if (!selectedGameType || isSubmitting) return;
+
     setIsSubmitting(true);
     const gameId = uuidv4();
-    await fetch("/api/room/start-game", {
+
+    console.log(localStorage.getItem("userId"));
+    const response = await fetch("/api/room/start-game", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ roomId, gameType: selectedGameType, gameId }),
     });
+
+    const data = await response.json();
+
+    console.log(data);
   };
 
   return (

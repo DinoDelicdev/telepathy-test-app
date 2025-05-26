@@ -23,6 +23,7 @@ const RoomEntryPage = () => {
     channel.bind("user-count-updated", (data: { userCount: number }) => {
       console.log("DATA");
       setUserCount(data.userCount);
+      // if (data.userCount >= 2) channel.unsubscribe();
     });
 
     return () => {

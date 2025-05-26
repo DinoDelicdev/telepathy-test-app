@@ -3,7 +3,7 @@ import pusher from "@/utils/pusherBackendClient";
 import redis from "@/utils/redisClient";
 
 export async function POST(req: NextRequest, context: { params: { roomId: string } }) {
-  const { params } = context; // Await params here
+  const { params } = await context; // Await params here
   const roomId = params.roomId;
 
   console.log("EVO ME");

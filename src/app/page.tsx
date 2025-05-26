@@ -14,9 +14,12 @@ export default function Home() {
   const [roomCode, setRoomCode] = useState("");
 
   useEffect(() => {
-    let randomNr = Math.floor(Math.random() * 1000000);
+    let randomNr = 0;
+    while (randomNr < 100000) {
+      randomNr = Math.floor(Math.random() * 1000000);
+    }
     setRoomNumber(randomNr);
-    localStorage.setItem("userId", String(randomNr));
+    localStorage.setItem("usersRoomId", String(randomNr));
   }, []);
 
   const handleProceedingToUsersRoom = () => {
