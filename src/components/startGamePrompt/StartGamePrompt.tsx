@@ -65,7 +65,7 @@ const StartGamePrompt: React.FC<JoiningRoomPropType> = ({ roomId }) => {
 
   useEffect(() => {
     const channel = pusherClient.subscribe(`room-${roomId}`);
-
+    console.log(channel)
     channel.bind("game-started", (gameData: GameDataType) => {
       console.log("Data AGAIN");
       console.log(gameData);

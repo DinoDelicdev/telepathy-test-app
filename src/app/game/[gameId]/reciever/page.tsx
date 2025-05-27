@@ -1,7 +1,7 @@
 import React from "react";
 
 const RecieverMovePage = () => {
-  return <div></div>;
+  return <div>EVO ME</div>;
 };
 
 export default RecieverMovePage;
