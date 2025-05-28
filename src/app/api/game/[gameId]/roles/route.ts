@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import pusher from "@/utils/pusherBackendClient";
 import redis from "@/utils/redisClient";
-import { v4 as uuidv4 } from "uuid";
+import images from "@/utils/images";
 
 interface GameDataType {
   id: string;
@@ -10,6 +10,9 @@ interface GameDataType {
   player1: { id: string; role: null | string };
   player2: { id: string; role: null | string };
   gameStarted: boolean;
+  move?: number;
+  reciever_display?: string[];
+  correct_answer?: string
 }
 
 export async function POST(req: NextRequest) {
@@ -44,7 +47,20 @@ export async function POST(req: NextRequest) {
     gameObj.player1.role = secondRole;
   }
 
+
+
+  // Select 4 random unique strings from images array
+  const shuffledImages = images.sort(() => 0.5 - Math.random());
+  const recieverDisplay = shuffledImages.slice(0, 4);
+
+  // Pick one random string from the selected 4 as the correct answer
+  const correctAnswer = recieverDisplay[Math.floor(Math.random() * recieverDisplay.length)];
+
+  gameObj.reciever_display = recieverDisplay;
+  gameObj.correct_answer = correctAnswer;
+
   gameObj.gameStarted = true;
+  gameObj.move = 1;
 
   const newCurrentGames = await redis.set("current-games", JSON.stringify(currentGames));
 

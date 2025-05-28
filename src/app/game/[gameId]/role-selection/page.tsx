@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useParams, useRouter } from "next/navigation";
 import pusherClient from "@/utils/pusherFrontendClient";
 
+
 interface GameDataType {
   id: string;
   roomId: string;
@@ -40,8 +41,11 @@ const StartGameRoom = () => {
 
     if (!channel || !channel.subscribed) {
       // If channel doesn't exist, or exists but is not subscribed (e.g., after StrictMode cleanup)
-      if (channel) { // If it exists but not subscribed
-        console.log(`[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`);
+      if (channel) {
+        // If it exists but not subscribed
+        console.log(
+          `[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`
+        );
         pusherClient.unsubscribe(newChannelName); // Ensure clean state before re-subscribing
       }
       console.log(`[StartGameRoom] Subscribing to channel: ${newChannelName}`);
@@ -52,11 +56,13 @@ const StartGameRoom = () => {
       );
     }
 
-    channel.bind('pusher:subscription_succeeded', () => {
-      console.log(`[StartGameRoom] Successfully subscribed to ${newChannelName}`);
+    channel.bind("pusher:subscription_succeeded", () => {
+      console.log(
+        `[StartGameRoom] Successfully subscribed to ${newChannelName}`
+      );
     });
 
-    channel.bind('pusher:subscription_error', (status: unknown) => {
+    channel.bind("pusher:subscription_error", (status: unknown) => {
       console.error(
         `[StartGameRoom] Failed to subscribe to ${newChannelName}, status:`,
         status
@@ -70,7 +76,9 @@ const StartGameRoom = () => {
       );
       // Verify message is for the current room, especially if not unsubscribing aggressively
       if (data.roomId !== actualRoomIdForChannel) {
-        console.warn(`[StartGameRoom] Received event for unexpected roomId ${data.roomId}. Current room is ${actualRoomIdForChannel}. Ignoring.`);
+        console.warn(
+          `[StartGameRoom] Received event for unexpected roomId ${data.roomId}. Current room is ${actualRoomIdForChannel}. Ignoring.`
+        );
         return;
       }
 
@@ -116,67 +124,79 @@ const StartGameRoom = () => {
       console.log(
         `[StartGameRoom CLEANUP] For channel ${currentChannelName}. Unbinding 'roles-selected'.`
       );
-      // It's crucial to get the correct channel instance for unbinding,
-      // especially if the channel object itself isn't stable across effect runs (though pusherClient.channel() should help).
+      
       const channelToCleanup = pusherClient.channel(currentChannelName || "");
       if (channelToCleanup) {
         channelToCleanup.unbind("roles-selected", rolesSelectedHandler);
-        // For Strict Mode, if you unsubscribe here, the next mount *must* re-subscribe.
-        // The logic `!channel.subscribed` above is designed to handle this.
-        pusherClient.unsubscribe(currentChannelName || ""); // Unsubscribe on cleanup
-        console.log(`[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`);
+        
+        pusherClient.unsubscribe(currentChannelName || ""); 
+        console.log(
+          `[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`
+        );
       } else {
-        console.log(`[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`);
+        console.log(
+          `[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`
+        );
       }
     };
-  }, [gameId, router]); // gameId dependency ensures re-subscription if the game context (URL) changes.
+  }, [gameId, router]); 
 
+  
+  const handleSettingSender = async () => {
+    const playerId = localStorage.getItem("telephaty_player_id");
 
-  // ... (rest of your StartGameRoom component: handleSettingSender, handleSettingReciever, JSX)
-  const handleSettingSender = async () => {
-    const playerId = localStorage.getItem("telephaty_player_id");
+    const response = await fetch(`/api/game/${gameId}/roles`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        gameId,
+        roleSelected: "sender",
+        userId: playerId,
+      }),
+    });
 
-    const response = await fetch(`/api/game/${gameId}/roles`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameId, roleSelected: "sender", userId: playerId }),
-    });
+    const data = await response.json();
 
-    const data = await response.json();
+    console.log("API Response for Sender:", data);
+  };
 
-    console.log("API Response for Sender:", data);
-  };
+  const handleSettingReciever = async () => {
+    const playerId = localStorage.getItem("telephaty_player_id");
 
-  const handleSettingReciever = async () => {
-    const playerId = localStorage.getItem("telephaty_player_id");
+    const response = await fetch(`/api/game/${gameId}/roles`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        gameId,
+        roleSelected: "reciever",
+        userId: playerId,
+      }),
+    });
 
-    const response = await fetch(`/api/game/${gameId}/roles`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ gameId, roleSelected: "reciever", userId: playerId }),
-    });
+    const data = await response.json();
 
-    const data = await response.json();
-
-    console.log("API Response for Reciever:",data);
-  };
-  return (
-    <div className="flex flex-col justify-center h-screen bg-amber-50 items-center">
-      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[99%] bg-amber-50 max-w-[650px] min-w-[600px]">
-        <CardHeader className="w-full text-center font-bold text-lg flex flex-col justify-center items-center">
-          <p>SELECT YOUR ROLE</p>
-        </CardHeader>
-        <CardContent className="w-full flex flex-col gap-2 h-[80%] justify-center items-center">
-          <Button className="w-[70%] mt-4" onClick={handleSettingSender}>
-            Sender
-          </Button>
-          <Button className="w-[70%] mt-4" onClick={handleSettingReciever}>
-            Reciever
-          </Button>
-        </CardContent>
-      </Card>
-    </div>
-  );
+    console.log("API Response for Reciever:", data);
+  };
+  return (
+    <div className="flex flex-col justify-center h-screen bg-amber-50 items-center">
+      {" "}
+      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[99%] bg-amber-50 max-w-[650px] min-w-[600px]">
+        {" "}
+        <CardHeader className="w-full text-center font-bold text-lg flex flex-col justify-center items-center">
+          <p>SELECT YOUR ROLE</p>{" "}
+        </CardHeader>{" "}
+        <CardContent className="w-full flex flex-col gap-2 h-[80%] justify-center items-center">
+          {" "}
+          <Button className="w-[70%] mt-4" onClick={handleSettingSender}>
+            Sender{" "}
+          </Button>{" "}
+          <Button className="w-[70%] mt-4" onClick={handleSettingReciever}>
+            Reciever{" "}
+          </Button>{" "}
+        </CardContent>{" "}
+      </Card>{" "}
+    </div>
+  );
 };
 
 export default StartGameRoom;
