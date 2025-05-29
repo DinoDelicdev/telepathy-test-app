@@ -33,65 +33,65 @@ const RecieverScreen = () => {
   const [displayEndGame, setDisplayEndGame] = useState(false);
   const [finalResult, setFinalResult] = useState(0);
 
-  useEffect(() => {
-    const actualRoomIdForChannel = localStorage.getItem("current_game_roomId");
-    console.log(`[StartGameRoom EFFECT RUN] gameId: ${gameId}, actualRoomId: ${actualRoomIdForChannel}`);
+  // useEffect(() => {
+  //   const actualRoomIdForChannel = localStorage.getItem("current_game_roomId");
+  //   console.log(`[StartGameRoom EFFECT RUN] gameId: ${gameId}, actualRoomId: ${actualRoomIdForChannel}`);
 
-    if (!actualRoomIdForChannel) {
-      console.error("[StartGameRoom ERROR] 'current_game_roomId' not found. Aborting effect.");
-      return;
-    }
+  //   if (!actualRoomIdForChannel) {
+  //     console.error("[StartGameRoom ERROR] 'current_game_roomId' not found. Aborting effect.");
+  //     return;
+  //   }
 
-    const newChannelName = `room-${actualRoomIdForChannel}`;
-    channelNameRef.current = newChannelName; // Store current channel name
+  //   const newChannelName = `room-${actualRoomIdForChannel}`;
+  //   channelNameRef.current = newChannelName; // Store current channel name
 
-    let channel = pusherClient.channel(newChannelName);
+  //   let channel = pusherClient.channel(newChannelName);
 
-    if (!channel || !channel.subscribed) {
-      // If channel doesn't exist, or exists but is not subscribed (e.g., after StrictMode cleanup)
-      if (channel) {
-        // If it exists but not subscribed
-        console.log(`[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`);
-        pusherClient.unsubscribe(newChannelName); // Ensure clean state before re-subscribing
-      }
-      console.log(`[StartGameRoom] Subscribing to channel: ${newChannelName}`);
-      channel = pusherClient.subscribe(newChannelName);
-    } else {
-      console.log(`[StartGameRoom] Already actively subscribed to channel: ${newChannelName}`);
-    }
+  //   if (!channel || !channel.subscribed) {
+  //     // If channel doesn't exist, or exists but is not subscribed (e.g., after StrictMode cleanup)
+  //     if (channel) {
+  //       // If it exists but not subscribed
+  //       console.log(`[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`);
+  //       pusherClient.unsubscribe(newChannelName); // Ensure clean state before re-subscribing
+  //     }
+  //     console.log(`[StartGameRoom] Subscribing to channel: ${newChannelName}`);
+  //     channel = pusherClient.subscribe(newChannelName);
+  //   } else {
+  //     console.log(`[StartGameRoom] Already actively subscribed to channel: ${newChannelName}`);
+  //   }
 
-    channel.bind("pusher:subscription_succeeded", () => {
-      console.log(`[StartGameRoom] Successfully subscribed to ${newChannelName}`);
-    });
+  //   channel.bind("pusher:subscription_succeeded", () => {
+  //     console.log(`[StartGameRoom] Successfully subscribed to ${newChannelName}`);
+  //   });
 
-    channel.bind("pusher:subscription_error", (status: unknown) => {
-      console.error(`[StartGameRoom] Failed to subscribe to ${newChannelName}, status:`, status);
-    });
+  //   channel.bind("pusher:subscription_error", (status: unknown) => {
+  //     console.error(`[StartGameRoom] Failed to subscribe to ${newChannelName}, status:`, status);
+  //   });
 
-    const moveReadyHandler = (data: GameDataType) => {
-      console.log("Ej evo meeeee");
-    };
+  //   const moveReadyHandler = (data: GameDataType) => {
+  //     console.log("Ej evo meeeee");
+  //   };
 
-    // Bind event
-    channel.bind("move-ready", moveReadyHandler);
-    console.log(`[StartGameRoom] Bound 'move-ready' event to channel ${newChannelName}.`);
+  //   // Bind event
+  //   channel.bind("move-ready", moveReadyHandler);
+  //   console.log(`[StartGameRoom] Bound 'move-ready' event to channel ${newChannelName}.`);
 
-    // Cleanup function
-    return () => {
-      const currentChannelName = channelNameRef.current; // Use the name from the ref for cleanup closure
-      console.log(`[StartGameRoom CLEANUP] For channel ${currentChannelName}. Unbinding 'roles-selected'.`);
+  //   // Cleanup function
+  //   return () => {
+  //     const currentChannelName = channelNameRef.current; // Use the name from the ref for cleanup closure
+  //     console.log(`[StartGameRoom CLEANUP] For channel ${currentChannelName}. Unbinding 'roles-selected'.`);
 
-      const channelToCleanup = pusherClient.channel(currentChannelName || "");
-      if (channelToCleanup) {
-        channelToCleanup.unbind("move-ready", moveReadyHandler);
+  //     const channelToCleanup = pusherClient.channel(currentChannelName || "");
+  //     if (channelToCleanup) {
+  //       channelToCleanup.unbind("move-ready", moveReadyHandler);
 
-        pusherClient.unsubscribe(currentChannelName || "");
-        console.log(`[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`);
-      } else {
-        console.log(`[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`);
-      }
-    };
-  }, [gameId, router]);
+  //       pusherClient.unsubscribe(currentChannelName || "");
+  //       console.log(`[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`);
+  //     } else {
+  //       console.log(`[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`);
+  //     }
+  //   };
+  // }, [gameId, router]);
 
   useEffect(() => {
     const fetchInitialData = async () => {

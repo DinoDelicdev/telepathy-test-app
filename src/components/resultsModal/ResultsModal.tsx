@@ -26,8 +26,7 @@ const correctMessages = [
     quote_origin: "Buddha",
   },
   {
-    quote:
-      "Intuition is the very force or activity of the soul in its experience through the body.",
+    quote: "Intuition is the very force or activity of the soul in its experience through the body.",
     quote_origin: "Terence McKenna",
   },
   {
@@ -35,8 +34,7 @@ const correctMessages = [
     quote_origin: "Blaise Pascal",
   },
   {
-    quote:
-      "We are all connected; to each other, biologically. To the Earth, chemically. To the rest of the universe, atomically.",
+    quote: "We are all connected; to each other, biologically. To the Earth, chemically. To the rest of the universe, atomically.",
     quote_origin: "Neil deGrasse Tyson",
   },
   {
@@ -44,8 +42,7 @@ const correctMessages = [
     quote_origin: "Eleven",
   },
   {
-    quote:
-      "There is a deep knowing within each of us that is beyond the reach of the analytical mind.",
+    quote: "There is a deep knowing within each of us that is beyond the reach of the analytical mind.",
     quote_origin: "Deepak Chopra",
   },
 ];
@@ -56,8 +53,7 @@ const notCorrectMessages = [
     quote_origin: "Magneto",
   },
   {
-    quote:
-      "I feel a great disturbance in the Force, as if millions of voices suddenly cried out in terror and were suddenly silenced.",
+    quote: "I feel a great disturbance in the Force, as if millions of voices suddenly cried out in terror and were suddenly silenced.",
     quote_origin: "Obi-Wan Kenobi",
   },
   {
@@ -69,8 +65,7 @@ const notCorrectMessages = [
     quote_origin: "Friedrich Nietzsche",
   },
   {
-    quote:
-      "There are more things in heaven and earth, Horatio, than are dreamt of in your philosophy.",
+    quote: "There are more things in heaven and earth, Horatio, than are dreamt of in your philosophy.",
     quote_origin: "Hamlet",
   },
   {
@@ -102,13 +97,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ result }) => {
   useEffect(() => {
     if (result === "Correct") {
       // Select a random quote from correctMessages
-      const randomQuote =
-        correctMessages[Math.floor(Math.random() * correctMessages.length)];
+      const randomQuote = correctMessages[Math.floor(Math.random() * correctMessages.length)];
       setQuote(randomQuote);
     } else if (result === "Wrong") {
       // Select a random quote from notCorrectMessages
-      const randomQuote =
-        notCorrectMessages[Math.floor(Math.random() * notCorrectMessages.length)];
+      const randomQuote = notCorrectMessages[Math.floor(Math.random() * notCorrectMessages.length)];
       setQuote(randomQuote);
     }
 
@@ -123,17 +116,11 @@ const ResultsModal: React.FC<ResultsModalProps> = ({ result }) => {
   return (
     <div className="absolute inset-0 bg-black bg-opacity-50 backdrop-blur-md flex justify-center items-center z-50">
       <div className="bg-white p-6 rounded-lg shadow-lg text-center">
-        <h2
-          className={`text-2xl font-bold ${
-            result === "Correct" ? "text-green-500" : "text-red-500"
-          }`}
-        >
-          {result}
-        </h2>
+        <h2 className={`text-2xl font-bold ${result === "Correct" ? "text-green-500" : "text-red-500"}`}>{result}</h2>
         {quote && (
           <div className="mt-4">
-            <p className="italic">"{quote.quote}"</p>
-            <p className="text-sm text-gray-500">- {quote.quote_origin}</p>
+            <p className="italic">{`"${quote.quote}"`}</p>
+            <p className="text-sm text-gray-500">{`- ${quote.quote_origin}`}</p>
           </div>
         )}
         <div className="mt-4 text-gray-700">

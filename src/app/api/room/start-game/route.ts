@@ -13,7 +13,7 @@ interface GameDataType {
 }
 
 export async function POST(req: NextRequest) {
-  const { roomId, gameType, gameId, userId } = await req.json();
+  const { roomId, gameType, gameId } = await req.json();
 
   if (!roomId || !gameType || !gameId) {
     return NextResponse.json({ error: "Missing parameters" }, { status: 400 });

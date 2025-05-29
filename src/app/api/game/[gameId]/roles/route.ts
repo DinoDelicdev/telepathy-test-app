@@ -12,8 +12,8 @@ interface GameDataType {
   gameStarted: boolean;
   move?: number;
   reciever_display?: string[];
-  correct_answer?: string
-  number_correct?: number
+  correct_answer?: string;
+  number_correct?: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Missing parameters" }, { status: 400 });
   }
 
-  let secondRole = roleSelected === "sender" ? "reciever" : "sender";
+  const secondRole = roleSelected === "sender" ? "reciever" : "sender";
 
   const currentGames: GameDataType[] | null = await redis.get("current-games");
   console.log("CCCCCCCCCCCCc");
@@ -48,8 +48,6 @@ export async function POST(req: NextRequest) {
     gameObj.player1.role = secondRole;
   }
 
-
-
   // Select 4 random unique strings from images array
   const shuffledImages = images.sort(() => 0.5 - Math.random());
   const recieverDisplay = shuffledImages.slice(0, 4);
@@ -64,7 +62,7 @@ export async function POST(req: NextRequest) {
   gameObj.move = 1;
   gameObj.number_correct = 0;
 
-  const newCurrentGames = await redis.set("current-games", JSON.stringify(currentGames));
+  await redis.set("current-games", JSON.stringify(currentGames));
 
   console.log("IDE PUSHER");
   await pusher.trigger(`room-${gameObj.roomId}`, "roles-selected", gameObj);
