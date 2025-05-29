@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
 import pusherClient from "@/utils/pusherFrontendClient";
 import Image from "next/image";
+import { Spinner } from "@/components/ui/spinner";
+import ResultsModal from "@/components/resultsModal/ResultsModal";
 
 interface GameDataType {
   id: string;
@@ -16,16 +18,18 @@ interface GameDataType {
   reciever_display?: string[];
   correct_answer: string;
   is_last_move_correct?: boolean;
+  number_correct?: number;
 }
 
 const SenderScreen = () => {
   const { gameId } = useParams<{ gameId: string }>();
   const router = useRouter();
   const channelNameRef = useRef<string | null>(null);
-  const [imageToDisplay, setImageToDisplay] = useState<string | null>(
-    "/dog.png"
-  );
+  const [imageToDisplay, setImageToDisplay] = useState<string | null>(null);
   const [move, setMove] = useState<number>(1);
+  const [resultDisplayed, setResultsDisplayed] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [displayEndGame, setDisplayEndGame] = useState(false);
 
   useEffect(() => {
     const actualRoomIdForChannel = localStorage.getItem("current_game_roomId");
@@ -42,7 +46,7 @@ const SenderScreen = () => {
     }
 
     const newChannelName = `room-${actualRoomIdForChannel}`;
-    channelNameRef.current = newChannelName; // Store current channel name
+    channelNameRef.current = newChannelName;
 
     let channel = pusherClient.channel(newChannelName);
 
@@ -77,11 +81,20 @@ const SenderScreen = () => {
     });
 
     const moveReadyHandler = (data: GameDataType) => {
-      console.log("EJ EVO ME MOJI STARI DRUGOVI")
-      console.log(data)
-      alert(`${data.is_last_move_correct ? "Correct" : "Wrong"}`)
-      setImageToDisplay(data.correct_answer)
-      setMove(data.move)
+      console.log("EJ EVO ME MOJI STARI DRUGOVI");
+      console.log(data);
+      setResultsDisplayed(true);
+      setResult(data.is_last_move_correct ? "Correct" : "Wrong");
+
+      // Automatically close the modal after 2 seconds
+      setTimeout(() => {
+        setResultsDisplayed(false);
+      }, 3000);
+      setImageToDisplay(data.correct_answer);
+      if (data.move > 10) {
+        setDisplayEndGame(true);
+      }
+      setMove(data.move);
     };
 
     // Bind event
@@ -131,19 +144,28 @@ const SenderScreen = () => {
 
   return (
     <div className="flex flex-col justify-center h-screen bg-amber-50 items-center">
-      {" "}
+      {displayEndGame ? <div>GOTOVO</div> : ""}
+      {resultDisplayed && !displayEndGame ? (
+        <ResultsModal result={result ? result : ""} />
+      ) : (
+        ""
+      )}{" "}
       <h1 className="text-2xl mb-4">Move {move} of 10</h1>
-      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[80%] bg-amber-50 max-w-[650px] min-w-[600px]">
+      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[80%] bg-amber-50 max-w-[650px] w-[90%]">
         <CardHeader className="w-full text-center">
           SEND THIS IMAGE TO YOUR FRIEND
         </CardHeader>
         <CardContent>
-          <Image
-            src={imageToDisplay || "/main.png"}
-            width={300}
-            height={300}
-            alt="Game Image"
-          ></Image>
+          {imageToDisplay ? (
+            <Image
+              src={imageToDisplay}
+              width={300}
+              height={300}
+              alt="Game Image"
+            ></Image>
+          ) : (
+            <Spinner></Spinner>
+          )}
         </CardContent>
       </Card>{" "}
     </div>

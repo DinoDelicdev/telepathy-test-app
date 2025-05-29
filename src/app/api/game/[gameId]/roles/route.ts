@@ -13,6 +13,7 @@ interface GameDataType {
   move?: number;
   reciever_display?: string[];
   correct_answer?: string
+  number_correct?: number
 }
 
 export async function POST(req: NextRequest) {
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest) {
 
   gameObj.gameStarted = true;
   gameObj.move = 1;
+  gameObj.number_correct = 0;
 
   const newCurrentGames = await redis.set("current-games", JSON.stringify(currentGames));
 

@@ -14,6 +14,7 @@ interface GameDataType {
   reciever_display?: string[];
   correct_answer?: string;
   is_last_move_correct?: boolean;
+  number_correct: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -39,6 +40,11 @@ export async function POST(req: NextRequest) {
   const correctAnswer =
     recieverDisplay[Math.floor(Math.random() * recieverDisplay.length)];
   gameObj.is_last_move_correct = gameObj.correct_answer === selectedImage;
+  gameObj.number_correct =
+    gameObj.correct_answer === selectedImage
+      ? gameObj.number_correct + 1
+      : gameObj.number_correct;
+
   gameObj.reciever_display = recieverDisplay;
   gameObj.correct_answer = correctAnswer;
 

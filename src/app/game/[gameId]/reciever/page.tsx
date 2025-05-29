@@ -1,10 +1,16 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react"; // Using useRef to manage channel instance
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+} from "@/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
 import pusherClient from "@/utils/pusherFrontendClient";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import ResultsModal from "@/components/resultsModal/ResultsModal";
 
 interface GameDataType {
   id: string;
@@ -24,12 +30,14 @@ const RecieverScreen = () => {
   const router = useRouter();
   const channelNameRef = useRef<string | null>(null);
   const [imagesToDisplay, setImagesToDisplay] = useState<string[] | []>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null)
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [move, setMove] = useState<number>(1);
+  const [resultDisplayed, setResultsDisplayed] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+  const [displayEndGame, setDisplayEndGame] = useState(false)
 
   useEffect(() => {
     const actualRoomIdForChannel = localStorage.getItem("current_game_roomId");
-
     console.log(
       `[StartGameRoom EFFECT RUN] gameId: ${gameId}, actualRoomId: ${actualRoomIdForChannel}`
     );
@@ -126,27 +134,38 @@ const RecieverScreen = () => {
   }, []);
 
   const handleSubmit = async () => {
-    if (!selectedImage) return
+    if (!selectedImage) return;
     const response = await fetch(`/api/game/${gameId}/move`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         gameId,
-        selectedImage
+        selectedImage,
       }),
     });
     const data = await response.json();
-    console.log(data);
-    alert(`${data.is_last_move_correct ? "Correct" : "Wrong"}`)
-    setMove(data.move)
+    setResultsDisplayed(true);
+    setResult(data.is_last_move_correct ? "Correct" : "Wrong");
+
+    // Automatically close the modal after 2 seconds
+    setTimeout(() => {
+      setResultsDisplayed(false);
+    }, 3500);
+
+    if (data.move > 10) {
+      setDisplayEndGame(true)
+    }
+    setMove(data.move);
     setImagesToDisplay(data.reciever_display || []);
+    setSelectedImage(null)
   };
 
   return (
-    <div className="flex flex-col justify-center h-screen bg-amber-50 items-center">
-      {" "}
+    <div className="flex flex-col justify-center h-screen bg-amber-50 items-center relative">
+      {displayEndGame ? <div>GOTOVO</div> : ""}
+      {resultDisplayed && !displayEndGame ? <ResultsModal result={result ? result : ""} /> : ""}
       <h1 className="text-2xl mb-4">Move {move} of 10</h1>
-      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[80%] bg-amber-50 max-w-[650px] min-w-[600px]">
+      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[80%] bg-amber-50 max-w-[650px] w-[90%]">
         <CardHeader className="w-full text-center">PICK ONE</CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 gap-4">
@@ -156,12 +175,13 @@ const RecieverScreen = () => {
                     <button
                       key={i}
                       onClick={() => {
-                        setSelectedImage(i)
+                        setSelectedImage(i);
                       }}
                       className="hover:scale-105 transition-transform"
                       style={{
                         borderWidth: selectedImage === i ? "4px" : "0px",
-                        borderColor: selectedImage === i ? "black" : "trnasparent"
+                        borderColor:
+                          selectedImage === i ? "black" : "transparent",
                       }}
                     >
                       <Image src={i} width={200} height={200} alt="Image" />
@@ -171,8 +191,10 @@ const RecieverScreen = () => {
               : ""}
           </div>
         </CardContent>
-        <CardFooter><Button onClick={handleSubmit}>SEND ANSWER</Button></CardFooter>
-      </Card>{" "}
+        <CardFooter>
+          <Button disabled={!selectedImage} onClick={handleSubmit}>SEND ANSWER</Button>
+        </CardFooter>
+      </Card>
     </div>
   );
 };
