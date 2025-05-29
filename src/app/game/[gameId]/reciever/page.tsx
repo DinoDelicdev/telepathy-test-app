@@ -1,7 +1,7 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react"; // Using useRef to manage channel instance
+import React, { useEffect, useState } from "react"; // Using useRef to manage channel instance
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 // import pusherClient from "@/utils/pusherFrontendClient";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
