@@ -14,7 +14,7 @@ const RoomEntryPage = () => {
 
   useEffect(() => {
     if (!hasEntered.current) {
-      fetch(`/api/room/enter`, {
+      fetch(`/api/room/${roomId}/enter`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
