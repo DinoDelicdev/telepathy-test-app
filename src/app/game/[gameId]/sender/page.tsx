@@ -6,6 +6,7 @@ import pusherClient from "@/utils/pusherFrontendClient";
 import Image from "next/image";
 import { Spinner } from "@/components/ui/spinner";
 import ResultsModal from "@/components/resultsModal/ResultsModal";
+import EndGameModal from "@/components/endGameModal/EndGameModal";
 
 interface GameDataType {
   id: string;
@@ -18,7 +19,7 @@ interface GameDataType {
   reciever_display?: string[];
   correct_answer: string;
   is_last_move_correct?: boolean;
-  number_correct?: number;
+  number_correct: number;
 }
 
 const SenderScreen = () => {
@@ -30,18 +31,15 @@ const SenderScreen = () => {
   const [resultDisplayed, setResultsDisplayed] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const [displayEndGame, setDisplayEndGame] = useState(false);
+  const [finalResult, setFinalResult] = useState(0);
 
   useEffect(() => {
     const actualRoomIdForChannel = localStorage.getItem("current_game_roomId");
 
-    console.log(
-      `[StartGameRoom EFFECT RUN] gameId: ${gameId}, actualRoomId: ${actualRoomIdForChannel}`
-    );
+    console.log(`[StartGameRoom EFFECT RUN] gameId: ${gameId}, actualRoomId: ${actualRoomIdForChannel}`);
 
     if (!actualRoomIdForChannel) {
-      console.error(
-        "[StartGameRoom ERROR] 'current_game_roomId' not found. Aborting effect."
-      );
+      console.error("[StartGameRoom ERROR] 'current_game_roomId' not found. Aborting effect.");
       return;
     }
 
@@ -54,30 +52,21 @@ const SenderScreen = () => {
       // If channel doesn't exist, or exists but is not subscribed (e.g., after StrictMode cleanup)
       if (channel) {
         // If it exists but not subscribed
-        console.log(
-          `[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`
-        );
+        console.log(`[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`);
         pusherClient.unsubscribe(newChannelName); // Ensure clean state before re-subscribing
       }
       console.log(`[StartGameRoom] Subscribing to channel: ${newChannelName}`);
       channel = pusherClient.subscribe(newChannelName);
     } else {
-      console.log(
-        `[StartGameRoom] Already actively subscribed to channel: ${newChannelName}`
-      );
+      console.log(`[StartGameRoom] Already actively subscribed to channel: ${newChannelName}`);
     }
 
     channel.bind("pusher:subscription_succeeded", () => {
-      console.log(
-        `[StartGameRoom] Successfully subscribed to ${newChannelName}`
-      );
+      console.log(`[StartGameRoom] Successfully subscribed to ${newChannelName}`);
     });
 
     channel.bind("pusher:subscription_error", (status: unknown) => {
-      console.error(
-        `[StartGameRoom] Failed to subscribe to ${newChannelName}, status:`,
-        status
-      );
+      console.error(`[StartGameRoom] Failed to subscribe to ${newChannelName}, status:`, status);
     });
 
     const moveReadyHandler = (data: GameDataType) => {
@@ -93,35 +82,28 @@ const SenderScreen = () => {
       setImageToDisplay(data.correct_answer);
       if (data.move > 10) {
         setDisplayEndGame(true);
+        setFinalResult(data.number_correct);
       }
       setMove(data.move);
     };
 
     // Bind event
     channel.bind("move-ready", moveReadyHandler);
-    console.log(
-      `[StartGameRoom] Bound 'move-ready' event to channel ${newChannelName}.`
-    );
+    console.log(`[StartGameRoom] Bound 'move-ready' event to channel ${newChannelName}.`);
 
     // Cleanup function
     return () => {
       const currentChannelName = channelNameRef.current; // Use the name from the ref for cleanup closure
-      console.log(
-        `[StartGameRoom CLEANUP] For channel ${currentChannelName}. Unbinding 'roles-selected'.`
-      );
+      console.log(`[StartGameRoom CLEANUP] For channel ${currentChannelName}. Unbinding 'roles-selected'.`);
 
       const channelToCleanup = pusherClient.channel(currentChannelName || "");
       if (channelToCleanup) {
         channelToCleanup.unbind("move-ready", moveReadyHandler);
 
         pusherClient.unsubscribe(currentChannelName || "");
-        console.log(
-          `[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`
-        );
+        console.log(`[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`);
       } else {
-        console.log(
-          `[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`
-        );
+        console.log(`[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`);
       }
     };
   }, [gameId, router]);
@@ -144,29 +126,11 @@ const SenderScreen = () => {
 
   return (
     <div className="flex flex-col justify-center h-screen bg-amber-50 items-center">
-      {displayEndGame ? <div>GOTOVO</div> : ""}
-      {resultDisplayed && !displayEndGame ? (
-        <ResultsModal result={result ? result : ""} />
-      ) : (
-        ""
-      )}{" "}
-      <h1 className="text-2xl mb-4">Move {move} of 10</h1>
+      {displayEndGame ? <EndGameModal result={finalResult} /> : ""}
+      {resultDisplayed && !displayEndGame ? <ResultsModal result={result ? result : ""} /> : ""} <h1 className="text-2xl mb-4">Move {move} of 10</h1>
       <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[80%] bg-amber-50 max-w-[650px] w-[90%]">
-        <CardHeader className="w-full text-center">
-          SEND THIS IMAGE TO YOUR FRIEND
-        </CardHeader>
-        <CardContent>
-          {imageToDisplay ? (
-            <Image
-              src={imageToDisplay}
-              width={300}
-              height={300}
-              alt="Game Image"
-            ></Image>
-          ) : (
-            <Spinner></Spinner>
-          )}
-        </CardContent>
+        <CardHeader className="w-full text-center">SEND THIS IMAGE TO YOUR FRIEND</CardHeader>
+        <CardContent>{imageToDisplay ? <Image src={imageToDisplay} width={300} height={300} alt="Game Image"></Image> : <Spinner></Spinner>}</CardContent>
       </Card>{" "}
     </div>
   );
