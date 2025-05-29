@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import pusher from "@/utils/pusherBackendClient";
 import redis from "@/utils/redisClient";
 
-export async function POST(req: NextRequest, context: { params: { roomId: string } }) {
-  const { params } = context; // Await params here
-  const roomId = params.roomId;
+export async function POST(req: NextRequest) {
+  const { roomId } = await req.json();
 
   console.log("EVO ME");
   console.log(roomId);
+
   if (!roomId) {
     return NextResponse.json({ error: "Missing roomId" }, { status: 400 });
   }
