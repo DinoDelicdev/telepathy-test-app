@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react"; // Using useRef to manage channel instance
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
-import pusherClient from "@/utils/pusherFrontendClient";
+// import pusherClient from "@/utils/pusherFrontendClient";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import ResultsModal from "@/components/resultsModal/ResultsModal";
@@ -23,8 +23,8 @@ interface GameDataType {
 
 const RecieverScreen = () => {
   const { gameId } = useParams<{ gameId: string }>();
-  const router = useRouter();
-  const channelNameRef = useRef<string | null>(null);
+  // const router = useRouter();
+  // const channelNameRef = useRef<string | null>(null);
   const [imagesToDisplay, setImagesToDisplay] = useState<string[] | []>([]);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [move, setMove] = useState<number>(1);
