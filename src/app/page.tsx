@@ -87,7 +87,8 @@ export default function Home() {
   };
 
   return (
-    <main className="h-screen flex flex-col bg-amber-50 p-4 justify-center items-center gap-4 max-h-screen overflow-auto">
+    // --- CHANGE IS ON THIS LINE ---
+    <main className="min-h-screen flex flex-col bg-amber-50 px-4 py-12 items-center gap-4">
       <div className="flex flex-col items-center text-center">
         <h1 className="text-4xl font-bold">Telepathy</h1>
         <p className="text-muted-foreground">A simple game of mind-reading.</p>
@@ -95,7 +96,7 @@ export default function Home() {
 
       <div className="flex justify-center relative w-full max-w-sm">
         <Image src="/main.png" alt="Telepathy Game" priority width={500} height={500} />
-        <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 500 500">
+        <svg className="absolute top-0 left-0 w-full h-full" viewBox="0 0 500 500" overflow="visible">
           <path
             ref={linePathRef}
             d="M 110 150 C 180 10, 220 10, 380 150"
