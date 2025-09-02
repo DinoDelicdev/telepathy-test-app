@@ -1,180 +1,97 @@
 "use client";
-import React, { useEffect, useState } from "react"; // Using useRef to manage channel instance
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/card";
-import { useParams } from "next/navigation";
-// import pusherClient from "@/utils/pusherFrontendClient";
-import Image from "next/image";
+
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import ResultsModal from "@/components/resultsModal/ResultsModal";
-import EndGameModal from "@/components/endGameModal/EndGameModal";
+import { useEffect, useState, useRef } from "react";
+import { Card, CardContent } from "@/components/ui/card";
 
-interface GameDataType {
-  id: string;
-  roomId: string;
-  gameType: string;
-  player1: { id: string; role: null | string };
-  player2: { id: string; role: null | string };
-  gameStarted: boolean;
-  move?: number;
-  reciever_display?: string[];
-  correct_answer?: string;
-  is_last_move_correct?: boolean;
-}
+export default function GamePage() {
+  const router = useRouter();
+  const params = useParams();
+  const searchParams = useSearchParams();
+  const effectRan = useRef(false);
 
-const RecieverScreen = () => {
-  const { gameId } = useParams<{ gameId: string }>();
-  // const router = useRouter();
-  // const channelNameRef = useRef<string | null>(null);
-  const [imagesToDisplay, setImagesToDisplay] = useState<string[] | []>([]);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [move, setMove] = useState<number>(1);
-  const [resultDisplayed, setResultsDisplayed] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [displayEndGame, setDisplayEndGame] = useState(false);
-  const [finalResult, setFinalResult] = useState(0);
+  // Details from URL
+  const roomId = params.gameId as string;
+  const initialGameType = searchParams.get("gameType");
+  const initialRole = searchParams.get("role");
+  const action = searchParams.get("action");
 
-  // useEffect(() => {
-  //   const actualRoomIdForChannel = localStorage.getItem("current_game_roomId");
-  //   console.log(`[StartGameRoom EFFECT RUN] gameId: ${gameId}, actualRoomId: ${actualRoomIdForChannel}`);
-
-  //   if (!actualRoomIdForChannel) {
-  //     console.error("[StartGameRoom ERROR] 'current_game_roomId' not found. Aborting effect.");
-  //     return;
-  //   }
-
-  //   const newChannelName = `room-${actualRoomIdForChannel}`;
-  //   channelNameRef.current = newChannelName; // Store current channel name
-
-  //   let channel = pusherClient.channel(newChannelName);
-
-  //   if (!channel || !channel.subscribed) {
-  //     // If channel doesn't exist, or exists but is not subscribed (e.g., after StrictMode cleanup)
-  //     if (channel) {
-  //       // If it exists but not subscribed
-  //       console.log(`[StartGameRoom] Channel ${newChannelName} exists but is not subscribed. Unsubscribing first to be safe.`);
-  //       pusherClient.unsubscribe(newChannelName); // Ensure clean state before re-subscribing
-  //     }
-  //     console.log(`[StartGameRoom] Subscribing to channel: ${newChannelName}`);
-  //     channel = pusherClient.subscribe(newChannelName);
-  //   } else {
-  //     console.log(`[StartGameRoom] Already actively subscribed to channel: ${newChannelName}`);
-  //   }
-
-  //   channel.bind("pusher:subscription_succeeded", () => {
-  //     console.log(`[StartGameRoom] Successfully subscribed to ${newChannelName}`);
-  //   });
-
-  //   channel.bind("pusher:subscription_error", (status: unknown) => {
-  //     console.error(`[StartGameRoom] Failed to subscribe to ${newChannelName}, status:`, status);
-  //   });
-
-  //   const moveReadyHandler = (data: GameDataType) => {
-  //     console.log("Ej evo meeeee");
-  //   };
-
-  //   // Bind event
-  //   channel.bind("move-ready", moveReadyHandler);
-  //   console.log(`[StartGameRoom] Bound 'move-ready' event to channel ${newChannelName}.`);
-
-  //   // Cleanup function
-  //   return () => {
-  //     const currentChannelName = channelNameRef.current; // Use the name from the ref for cleanup closure
-  //     console.log(`[StartGameRoom CLEANUP] For channel ${currentChannelName}. Unbinding 'roles-selected'.`);
-
-  //     const channelToCleanup = pusherClient.channel(currentChannelName || "");
-  //     if (channelToCleanup) {
-  //       channelToCleanup.unbind("move-ready", moveReadyHandler);
-
-  //       pusherClient.unsubscribe(currentChannelName || "");
-  //       console.log(`[StartGameRoom CLEANUP] Unsubscribed from ${currentChannelName}.`);
-  //     } else {
-  //       console.log(`[StartGameRoom CLEANUP] Channel ${currentChannelName} not found for unbinding/unsubscribing.`);
-  //     }
-  //   };
-  // }, [gameId, router]);
+  // State
+  const [socket, setSocket] = useState<WebSocket | null>(null);
+  const [playerCount, setPlayerCount] = useState(0);
+  const [confirmedGame, setConfirmedGame] = useState<{ gameType: string; role: string } | null>(null);
 
   useEffect(() => {
-    const fetchInitialData = async () => {
-      const response = await fetch(`/api/game/${gameId}/data`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          gameId,
-        }),
-      });
-      const data: GameDataType = await response.json();
-      console.log(data);
-      setImagesToDisplay(data.reciever_display || []);
-    };
-    fetchInitialData();
-  }, []);
+    if (effectRan.current === true) {
+      if (!roomId) return;
+      const newSocket = new WebSocket(`ws://localhost:8081/${roomId}`);
 
-  const handleSubmit = async () => {
-    if (!selectedImage) return;
-    const response = await fetch(`/api/game/${gameId}/move`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        gameId,
-        selectedImage,
-      }),
-    });
-    const data = await response.json();
-    setResultsDisplayed(true);
-    setResult(data.is_last_move_correct ? "Correct" : "Wrong");
+      newSocket.onopen = () => {
+        console.log(`✅ Game Page WebSocket connected to room: ${roomId}`);
+        // If the URL indicates this user is initiating, send the message
+        if (action === "initiate" && initialGameType && initialRole) {
+          newSocket.send(
+            JSON.stringify({
+              type: "JOIN_AND_INITIATE_GAME",
+              payload: { gameType: initialGameType, role: initialRole },
+            })
+          );
+        }
+      };
 
-    // Automatically close the modal after 2 seconds
-    setTimeout(() => {
-      setResultsDisplayed(false);
-    }, 3500);
+      newSocket.onmessage = (event) => {
+        const message = JSON.parse(event.data);
+        console.log("📢 Game Page Message:", message);
+        if (message.type === "ROOM_UPDATE") setPlayerCount(message.count);
+        // The server's response is the final word on the game details
+        if (message.type === "GAME_STARTED") {
+          setConfirmedGame(message.payload);
+        }
+      };
 
-    if (data.move > 10) {
-      setDisplayEndGame(true);
-      setFinalResult(data.number_correct);
+      setSocket(newSocket);
     }
-    setMove(data.move);
-    setImagesToDisplay(data.reciever_display || []);
-    setSelectedImage(null);
-  };
+    return () => {
+      effectRan.current = true;
+      if (socket) socket.close();
+    };
+  }, [roomId, action, initialGameType, initialRole, socket]);
 
+  // WAITING SCREEN: Show this until the server confirms the game
+  if (!confirmedGame) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center text-center bg-gray-100">
+        <h1 className="text-3xl font-bold">Connecting to Room...</h1>
+        <p className="font-mono text-2xl my-4">{roomId}</p>
+        <p>Players: {playerCount} / 2</p>
+        <p className="mt-4 animate-pulse">Waiting for game to start...</p>
+      </main>
+    );
+  }
+
+  // GAME SCREEN: Shown after server confirmation
   return (
-    <div className="flex flex-col justify-center h-screen bg-amber-50 items-center relative">
-      {displayEndGame ? <EndGameModal result={finalResult} /> : ""}
-      {resultDisplayed && !displayEndGame ? <ResultsModal result={result ? result : ""} /> : ""}
-      <h1 className="text-2xl mb-4">Move {move} of 10</h1>
-      <Card className="min-h-[50%] mx-2 flex flex-col items-center max-h-[80%] bg-amber-50 max-w-[650px] w-[90%]">
-        <CardHeader className="w-full text-center">PICK ONE</CardHeader>
-        <CardContent>
-          <div className="grid grid-cols-2 gap-4">
-            {imagesToDisplay.length
-              ? imagesToDisplay.map((i) => {
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => {
-                        setSelectedImage(i);
-                      }}
-                      className="hover:scale-105 transition-transform"
-                      style={{
-                        borderWidth: selectedImage === i ? "4px" : "0px",
-                        borderColor: selectedImage === i ? "black" : "transparent",
-                      }}
-                    >
-                      <Image src={i} width={200} height={200} alt="Image" />
-                    </button>
-                  );
-                })
-              : ""}
-          </div>
+    <main className="min-h-screen flex flex-col bg-green-100 px-4 py-12 items-center justify-center gap-4 text-center">
+      <Card className="p-4 w-full max-w-sm">
+        <CardContent className="p-2">
+          <h1 className="text-4xl font-bold">Game in Progress!</h1>
+          <p className="text-sm">Room Code: {roomId}</p>
+          <hr className="w-full my-4" />
+          <p className="text-xl">
+            Game Mode: <span className="font-bold uppercase">{confirmedGame.gameType}</span>
+          </p>
+          <p className="text-2xl">
+            Your Role: <span className="font-bold uppercase">{confirmedGame.role}</span>
+          </p>
         </CardContent>
-        <CardFooter>
-          <Button disabled={!selectedImage} onClick={handleSubmit}>
-            SEND ANSWER
-          </Button>
-        </CardFooter>
       </Card>
-    </div>
+      <div className="mt-6 p-8 border-2 border-dashed rounded-lg w-full max-w-sm">
+        <p className="text-muted-foreground">Game Interface Placeholder</p>
+      </div>
+      <Button onClick={() => router.push("/")} variant="outline" className="mt-6">
+        Leave Game
+      </Button>
+    </main>
   );
-};
-
-export default RecieverScreen;
+}
