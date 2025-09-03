@@ -1,28 +1,17 @@
 "use client";
 
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Card, CardContent } from "@/components/ui/card";
-import {
-  InputOTP,
-  InputOTPGroup,
-  InputOTPSlot,
-} from "@/components/ui/input-otp";
-import {
-  Drawer,
-  DrawerTrigger,
-  DrawerContent,
-  DrawerHeader,
-  DrawerTitle,
-  DrawerDescription,
-  DrawerFooter,
-  DrawerClose,
-} from "@/components/ui/drawer";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { Send, Ear } from "lucide-react";
 import { cn } from "@/lib/utils";
-import "./home.css"; // We'll create this CSS file
+import "./home.css";
 
 type GameType = {
   key: string;
@@ -33,38 +22,11 @@ type GameType = {
   desc: string;
 };
 const gameTypes: GameType[] = [
-  {
-    key: "emotions",
-    image: "/dog.png",
-    title: "EMOTIONS",
-    desc: "Guess the right character",
-  },
-  {
-    key: "places",
-    image: "/places.png", // Assuming you have this image
-    title: "PLACES",
-    desc: "Pick the right place",
-  },
-  {
-    key: "colors",
-    color: "bg-pink-300",
-    title: "COLORS",
-    desc: "Pick the right color",
-  },
-  {
-    key: "random_words",
-    color: "bg-blue-200",
-    text: "FOX",
-    title: "RANDOM WORDS",
-    desc: "Guess the random word",
-  },
-  {
-    key: "numbers",
-    color: "bg-green-200",
-    text: "42",
-    title: "NUMBERS",
-    desc: "Guess the secret number",
-  },
+  { key: "emotions", image: "/dog.png", title: "EMOTIONS", desc: "Guess the right character" },
+  { key: "places", image: "/places.png", title: "PLACES", desc: "Pick the right place" },
+  { key: "colors", color: "bg-pink-300", title: "COLORS", desc: "Pick the right color" },
+  { key: "random_words", color: "bg-blue-200", text: "FOX", title: "RANDOM WORDS", desc: "Guess the random word" },
+  { key: "numbers", color: "bg-green-200", text: "42", title: "NUMBERS", desc: "Guess the secret number" },
 ];
 
 export default function Home() {
@@ -73,12 +35,8 @@ export default function Home() {
   const [currentRoomId, setCurrentRoomId] = useState<string | null>(null);
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
-  const [selectedGameType, setSelectedGameType] = useState<GameType | null>(
-    null
-  );
-  const [selectedRole, setSelectedRole] = useState<
-    "sender" | "receiver" | null
-  >(null);
+  const [selectedGameType, setSelectedGameType] = useState<GameType | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"sender" | "receiver" | null>(null);
   const [roomCodeToJoin, setRoomCodeToJoin] = useState("");
   const [isGameSelectionOpen, setIsGameSelectionOpen] = useState(false);
   const pendingActionRef = useRef<any | null>(null);
@@ -105,9 +63,7 @@ export default function Home() {
       if (message.type === "ROOM_UPDATE") setPlayerCount(message.count);
       if (message.type === "GAME_STARTED") {
         const { roomId, gameType, role, playerId } = message.payload;
-        router.push(
-          `/game/${roomId}?gameType=${gameType}&role=${role}&playerId=${playerId}`
-        );
+        router.push(`/game/${roomId}?gameType=${gameType}&role=${role}&playerId=${playerId}`);
       }
     };
     setSocket(newSocket);
@@ -121,21 +77,13 @@ export default function Home() {
 
   const handleStartGame = () => {
     if (!socket || !selectedGameType || !selectedRole) return;
-    socket.send(
-      JSON.stringify({
-        type: "START_GAME",
-        payload: { gameType: selectedGameType.key, role: selectedRole },
-      })
-    );
+    socket.send(JSON.stringify({ type: "START_GAME", payload: { gameType: selectedGameType.key, role: selectedRole } }));
     setIsGameSelectionOpen(false);
   };
 
   const handleJoinAndInitiate = () => {
     if (roomCodeToJoin.length < 6 || !selectedGameType || !selectedRole) return;
-    pendingActionRef.current = {
-      type: "START_GAME",
-      payload: { gameType: selectedGameType.key, role: selectedRole },
-    };
+    pendingActionRef.current = { type: "START_GAME", payload: { gameType: selectedGameType.key, role: selectedRole } };
     setCurrentRoomId(roomCodeToJoin);
     setIsGameSelectionOpen(false);
   };
@@ -147,53 +95,26 @@ export default function Home() {
         <p className="text-muted-foreground">A simple game of mind-reading.</p>
       </div>
 
-      {/* --- MODIFIED: Added a wrapper div and SVG for the animated line --- */}
       <div className="relative w-[300px] h-[300px]">
-        {" "}
-        {/* Ensure this div matches Image dimensions */}
-        <Image
-          src="/main.png"
-          alt="Telepathy Game"
-          priority
-          width={300}
-          height={300}
-        />
-        <svg
-          className="telepathy-line"
-          viewBox="0 0 300 300"
-          fill="none"
-          xmlns="http://www.w3.org/2000/svg"
-        >
-          {/* Adjust the 'd' attribute for your desired curve */}
-          {/* M = moveto, C = curveto (control point 1, control point 2, end point) */}
-          <path
-            d="M80 90 C100 20, 250 20, 230 90" // Moved up by 30 pixels (120->90, 50->20)
-            stroke="red"
-            strokeWidth="4"
-            strokeDasharray="10 10" // Dotted line
-            strokeLinecap="round"
-          />
+        <Image src="/main.png" alt="Telepathy Game" priority width={300} height={300} />
+        <svg className="telepathy-line" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M80 90 C100 20, 250 20, 230 90" stroke="red" strokeWidth="4" strokeDasharray="10 10" strokeLinecap="round" />
         </svg>
       </div>
-      {/* --- END MODIFIED SECTION --- */}
 
       <Card className="w-full max-w-xs p-4 bg-white/80">
         <CardContent className="text-center p-0">
           <p>
-            Your Personal Room Code is:{" "}
-            <span className="font-bold text-xl tracking-widest text-blue-700">
-              {myInitialRoomId}
-            </span>
+            Your Personal Room Code is: <span className="font-bold text-xl tracking-widest text-blue-700">{myInitialRoomId}</span>
           </p>
           <hr className="my-2" />
           <p className="font-semibold">
-            Players in current room ({currentRoomId}):{" "}
-            <span className="text-green-600 font-bold text-xl">
-              {playerCount}
-            </span>
+            Players in current room ({currentRoomId}): <span className="text-green-600 font-bold text-xl">{playerCount}</span>
           </p>
         </CardContent>
       </Card>
+
+      {/* --- THIS IS THE RESTORED BUTTON AND DRAWER --- */}
       <div className="flex flex-col gap-2 items-center w-full max-w-xs">
         <Drawer>
           <DrawerTrigger asChild>
@@ -205,17 +126,10 @@ export default function Home() {
             <div className="mx-auto w-full max-w-sm">
               <DrawerHeader>
                 <DrawerTitle>Join Room</DrawerTitle>
-                <DrawerDescription>
-                  Enter the 6-digit code to join a friend's lobby.
-                </DrawerDescription>
+                <DrawerDescription>Enter the 6-digit code to join a friend's lobby.</DrawerDescription>
               </DrawerHeader>
               <div className="p-4 flex flex-col items-center gap-4">
-                <InputOTP
-                  maxLength={6}
-                  pattern={REGEXP_ONLY_DIGITS}
-                  value={roomCodeToJoin}
-                  onChange={setRoomCodeToJoin}
-                >
+                <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={roomCodeToJoin} onChange={setRoomCodeToJoin}>
                   <InputOTPGroup>
                     {[...Array(6)].map((_, i) => (
                       <InputOTPSlot key={i} index={i} />
@@ -223,11 +137,7 @@ export default function Home() {
                   </InputOTPGroup>
                 </InputOTP>
                 <DrawerClose asChild>
-                  <Button
-                    onClick={handleSimpleJoin}
-                    className="w-full"
-                    disabled={roomCodeToJoin.length < 6}
-                  >
+                  <Button onClick={handleSimpleJoin} className="w-full" disabled={roomCodeToJoin.length < 6}>
                     Proceed To Friend's Room
                   </Button>
                 </DrawerClose>
@@ -241,10 +151,9 @@ export default function Home() {
           </DrawerContent>
         </Drawer>
       </div>
+
       <div className="w-full max-w-md mt-6">
-        <h3 className="text-center font-semibold mb-3 text-lg">
-          Available Game Modes
-        </h3>
+        <h3 className="text-center font-semibold mb-3 text-lg">Available Game Modes</h3>
         <div className="flex flex-col justify-center items-center w-full gap-2">
           {gameTypes.map((type) => (
             <Card
@@ -258,32 +167,9 @@ export default function Home() {
               }}
             >
               <CardContent className="w-full flex items-center justify-between gap-2 px-8 py-0">
-                {type.image ? (
-                  <Image
-                    className="rounded-lg"
-                    src={type.image}
-                    width={60}
-                    height={60}
-                    alt={type.title}
-                  />
-                ) : (
-                  <div
-                    className={cn(
-                      "h-[60px] w-[60px] rounded-lg flex justify-center items-center",
-                      type.color
-                    )}
-                  >
-                    {type.text && (
-                      <p className="text-lg text-blue-950 font-bold">
-                        {type.text}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {type.image ? <Image className="rounded-lg" src={type.image} width={60} height={60} alt={type.title} /> : <div className={cn("h-[60px] w-[60px] rounded-lg flex justify-center items-center", type.color)}>{type.text && <p className="text-lg text-blue-950 font-bold">{type.text}</p>}</div>}
                 <div className="mt-1 text-left flex-1">
-                  <p className="font-bold text-sm leading-tight">
-                    {type.title}
-                  </p>
+                  <p className="font-bold text-sm leading-tight">{type.title}</p>
                   <p className="text-xs text-muted-foreground">{type.desc}</p>
                 </div>
               </CardContent>
@@ -291,6 +177,7 @@ export default function Home() {
           ))}
         </div>
       </div>
+
       <Drawer
         open={isGameSelectionOpen}
         onOpenChange={(isOpen) => {
@@ -307,54 +194,35 @@ export default function Home() {
                 <>
                   <DrawerHeader>
                     <DrawerTitle>{selectedGameType.title}</DrawerTitle>
-                    <DrawerDescription>
-                      Select a role, then enter your friend's code to join and
-                      start.
-                    </DrawerDescription>
+                    <DrawerDescription>Select a role, then enter your friend's code to join and start.</DrawerDescription>
                   </DrawerHeader>
                   <div className="p-4 flex flex-col gap-4">
-                    <div className="flex gap-4 w-full">
-                      <Button
-                        onClick={() => setSelectedRole("sender")}
-                        variant={
-                          selectedRole === "sender" ? "default" : "outline"
-                        }
-                        className="w-full"
-                      >
-                        Sender
-                      </Button>
-                      <Button
-                        onClick={() => setSelectedRole("receiver")}
-                        variant={
-                          selectedRole === "receiver" ? "default" : "outline"
-                        }
-                        className="w-full"
-                      >
-                        Receiver
-                      </Button>
-                    </div>
+                    <ToggleGroup
+                      type="single"
+                      value={selectedRole || ""}
+                      onValueChange={(role) => {
+                        if (role) setSelectedRole(role as "sender" | "receiver");
+                      }}
+                      className="grid grid-cols-2 gap-2"
+                    >
+                      <ToggleGroupItem value="sender" aria-label="Select Sender" className="h-12 text-base flex gap-2">
+                        <Send size={18} /> Sender
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="receiver" aria-label="Select Receiver" className="h-12 text-base flex gap-2">
+                        <Ear size={18} /> Receiver
+                      </ToggleGroupItem>
+                    </ToggleGroup>
                     {selectedRole && (
                       <div className="flex flex-col items-center gap-2 pt-4 border-t">
-                        <p className="text-sm font-medium">
-                          Enter Friend's Code:
-                        </p>
-                        <InputOTP
-                          maxLength={6}
-                          pattern={REGEXP_ONLY_DIGITS}
-                          value={roomCodeToJoin}
-                          onChange={setRoomCodeToJoin}
-                        >
+                        <p className="text-sm font-medium">Enter Friend's Code:</p>
+                        <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={roomCodeToJoin} onChange={setRoomCodeToJoin}>
                           <InputOTPGroup>
                             {[...Array(6)].map((_, i) => (
                               <InputOTPSlot key={i} index={i} />
                             ))}
                           </InputOTPGroup>
                         </InputOTP>
-                        <Button
-                          onClick={handleJoinAndInitiate}
-                          className="w-full mt-2"
-                          disabled={roomCodeToJoin.length < 6}
-                        >
+                        <Button onClick={handleJoinAndInitiate} className="w-full mt-2" disabled={roomCodeToJoin.length < 6}>
                           Join & Start
                         </Button>
                       </div>
@@ -365,36 +233,25 @@ export default function Home() {
                 <>
                   <DrawerHeader>
                     <DrawerTitle>{selectedGameType.title}</DrawerTitle>
-                    <DrawerDescription>
-                      You're connected! Select a role and start the game.
-                    </DrawerDescription>
+                    <DrawerDescription>You're connected! Select a role and start the game.</DrawerDescription>
                   </DrawerHeader>
                   <div className="p-4 flex flex-col gap-4">
-                    <div className="flex gap-4 w-full">
-                      <Button
-                        onClick={() => setSelectedRole("sender")}
-                        variant={
-                          selectedRole === "sender" ? "default" : "outline"
-                        }
-                        className="w-full"
-                      >
-                        Sender
-                      </Button>
-                      <Button
-                        onClick={() => setSelectedRole("receiver")}
-                        variant={
-                          selectedRole === "receiver" ? "default" : "outline"
-                        }
-                        className="w-full"
-                      >
-                        Receiver
-                      </Button>
-                    </div>
-                    <Button
-                      onClick={handleStartGame}
-                      className="w-full mt-4"
-                      disabled={!selectedRole}
+                    <ToggleGroup
+                      type="single"
+                      value={selectedRole || ""}
+                      onValueChange={(role) => {
+                        if (role) setSelectedRole(role as "sender" | "receiver");
+                      }}
+                      className="grid grid-cols-2 gap-2"
                     >
+                      <ToggleGroupItem value="sender" aria-label="Select Sender" className="h-12 text-base flex gap-2">
+                        <Send size={18} /> Sender
+                      </ToggleGroupItem>
+                      <ToggleGroupItem value="receiver" aria-label="Select Receiver" className="h-12 text-base flex gap-2">
+                        <Ear size={18} /> Receiver
+                      </ToggleGroupItem>
+                    </ToggleGroup>
+                    <Button onClick={handleStartGame} className="w-full mt-4" disabled={!selectedRole}>
                       Start Game
                     </Button>
                   </div>
