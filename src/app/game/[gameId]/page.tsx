@@ -32,7 +32,8 @@ export default function GamePage() {
 
   useEffect(() => {
     if (!gameId || !playerId) return;
-    const socket = new WebSocket(`ws://localhost:8081/${gameId}`);
+    const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || `ws://localhost:8081`;
+    const socket = new WebSocket(`${wsUrl}/${gameId}`);
     socketRef.current = socket;
     socket.onopen = () => {
       setGameStatus("Waiting for other player...");

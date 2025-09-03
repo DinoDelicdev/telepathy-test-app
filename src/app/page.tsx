@@ -50,7 +50,8 @@ export default function Home() {
   useEffect(() => {
     if (socket) socket.close();
     if (!currentRoomId) return;
-    const newSocket = new WebSocket(`ws://localhost:8081/${currentRoomId}`);
+    const wsUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || `ws://localhost:8081`;
+    const newSocket = new WebSocket(`${wsUrl}/${currentRoomId}`);
     newSocket.onopen = () => {
       newSocket.send(JSON.stringify({ type: "IDENTIFY_LOBBY" }));
       if (pendingActionRef.current) {
