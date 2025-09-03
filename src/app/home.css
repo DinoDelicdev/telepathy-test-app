@@ -1,0 +1,25 @@
+/* /app/home.css */
+
+.telepathy-line {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible; /* Ensure the path isn't clipped */
+}
+
+.telepathy-line path {
+  animation: dash 5s linear infinite; /* Adjust duration for speed */
+}
+
+@keyframes dash {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    /* This value should be roughly the length of your path */
+    /* A value around 100-200 is usually good for a line like this */
+    stroke-dashoffset: 200; 
+  }
+}

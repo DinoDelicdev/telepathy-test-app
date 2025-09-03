@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -22,6 +22,7 @@ import {
   DrawerClose,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
+import "./home.css"; // We'll create this CSS file
 
 type GameType = {
   key: string;
@@ -40,7 +41,7 @@ const gameTypes: GameType[] = [
   },
   {
     key: "places",
-    image: "/places.png",
+    image: "/places.png", // Assuming you have this image
     title: "PLACES",
     desc: "Pick the right place",
   },
@@ -145,13 +146,37 @@ export default function Home() {
         <h1 className="text-4xl font-bold">Telepathy</h1>
         <p className="text-muted-foreground">A simple game of mind-reading.</p>
       </div>
-      <Image
-        src="/main.png"
-        alt="Telepathy Game"
-        priority
-        width={300}
-        height={300}
-      />
+
+      {/* --- MODIFIED: Added a wrapper div and SVG for the animated line --- */}
+      <div className="relative w-[300px] h-[300px]">
+        {" "}
+        {/* Ensure this div matches Image dimensions */}
+        <Image
+          src="/main.png"
+          alt="Telepathy Game"
+          priority
+          width={300}
+          height={300}
+        />
+        <svg
+          className="telepathy-line"
+          viewBox="0 0 300 300"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {/* Adjust the 'd' attribute for your desired curve */}
+          {/* M = moveto, C = curveto (control point 1, control point 2, end point) */}
+          <path
+            d="M80 90 C100 20, 250 20, 230 90" // Moved up by 30 pixels (120->90, 50->20)
+            stroke="red"
+            strokeWidth="4"
+            strokeDasharray="10 10" // Dotted line
+            strokeLinecap="round"
+          />
+        </svg>
+      </div>
+      {/* --- END MODIFIED SECTION --- */}
+
       <Card className="w-full max-w-xs p-4 bg-white/80">
         <CardContent className="text-center p-0">
           <p>
