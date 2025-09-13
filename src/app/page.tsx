@@ -99,7 +99,8 @@ export default function Home() {
       <div className="relative w-[300px] h-[300px]">
         <Image src="/main.png" alt="Telepathy Game" priority width={300} height={300} />
         <svg className="telepathy-line" viewBox="0 0 300 300" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M80 90 C100 20, 250 20, 230 90" stroke="red" strokeWidth="4" strokeDasharray="10 10" strokeLinecap="round" />
+          {/* The updated path is below */}
+          <path d="M100 70 A100 80 0 0 1 200 70" stroke="black" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" />
         </svg>
       </div>
 
