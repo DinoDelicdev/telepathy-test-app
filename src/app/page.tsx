@@ -9,7 +9,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import { Drawer, DrawerTrigger, DrawerContent, DrawerHeader, DrawerTitle, DrawerDescription, DrawerFooter, DrawerClose } from "@/components/ui/drawer";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
-import { Send, Ear } from "lucide-react";
+import { Send, Ear, ArrowRight, Link, Check, CheckIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import "./home.css";
 
@@ -92,7 +92,8 @@ export default function Home() {
   return (
     <main className="min-h-screen flex flex-col bg-amber-50 px-4 py-12 items-center gap-4">
       <div className="flex flex-col items-center text-center">
-        <h1 className="text-4xl font-bold">Telepathy</h1>
+        <h1 className="text-4xl font-bold">Simple</h1>
+        <h1 className="text-4xl font-bold">Telepathy Test</h1>
         <p className="text-muted-foreground">A simple game of mind-reading.</p>
       </div>
 
@@ -104,25 +105,35 @@ export default function Home() {
         </svg>
       </div>
 
-      <Card className="w-full max-w-xs p-4 bg-white/80">
-        <CardContent className="text-center p-0">
-          <p>
-            Your Personal Room Code is: <span className="font-bold text-xl tracking-widest text-blue-700">{myInitialRoomId}</span>
-          </p>
-          <hr className="my-2" />
-          <p className="font-semibold">
-            Players in current room ({currentRoomId}): <span className="text-green-600 font-bold text-xl">{playerCount}</span>
-          </p>
-        </CardContent>
-      </Card>
+      <p>
+        My Connect Code: <br />
+      </p>
+      <p className="font-bold text-xl tracking-widest">{myInitialRoomId}</p>
+      {/* <hr className="my-2" /> */}
+      {/* <p className="font-semibold">
+        Players in current room ({currentRoomId}): <span className="text-green-600 font-bold text-xl">{playerCount}</span>
+      </p> */}
+      {playerCount === 2 ? (
+        <div className="flex items-center gap-x-2 bg-black text-white px-4 py-2 rounded-3xl">
+          <Link className="text-white" size={18} />
+          <p className="font-small">CONNECTED</p>
+          <div className="bg-green-500 rounded-full p-1 flex items-center justify-center">
+            <CheckIcon size={18} className="h-4 w-4 text-black" />
+          </div>
+        </div>
+      ) : null}
 
       {/* --- THIS IS THE RESTORED BUTTON AND DRAWER --- */}
       <div className="flex flex-col gap-2 items-center w-full max-w-xs">
         <Drawer>
           <DrawerTrigger asChild>
-            <Button variant="ghost" className="w-full">
-              Join a Friend's Room
-            </Button>
+            {playerCount < 2 ? (
+              <Button variant="ghost" className="w-full underline">
+                Connect With Another Device <ArrowRight />
+              </Button>
+            ) : (
+              ""
+            )}
           </DrawerTrigger>
           <DrawerContent>
             <div className="mx-auto w-full max-w-sm">
@@ -154,8 +165,8 @@ export default function Home() {
         </Drawer>
       </div>
 
-      <div className="w-full max-w-md mt-6">
-        <h3 className="text-center font-semibold mb-3 text-lg">Available Game Modes</h3>
+      <div className="w-full max-w-md mt-2">
+        {/* <h3 className="text-center font-semibold mb-3 text-lg">Available Game Modes</h3> */}
         <div className="flex flex-col justify-center items-center w-full gap-2">
           {gameTypes.map((type) => (
             <Card
