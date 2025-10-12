@@ -4,7 +4,6 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
 
-// --- MODIFIED: Removed unused icons, added Timer ---
 import { CheckCircle, XCircle, Link, Link2Off, Check, X, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -27,7 +26,6 @@ export default function GamePage() {
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
-  // --- NEW: State for the countdown timer ---
   const [countdown, setCountdown] = useState<number | null>(null);
 
   const gameId = useMemo(() => params.gameId as string, [params.gameId]);
@@ -54,7 +52,6 @@ export default function GamePage() {
           setRound(payload.round);
           setScore(payload.score);
           setRoundResult(null);
-          // --- MODIFIED: Reset countdown for the new round ---
           setCountdown(null);
           if (currentRole === "sender" && payload.sender) setSenderItem(payload.sender.correctItem);
           if (currentRole === "receiver" && payload.receiver) {
@@ -94,10 +91,9 @@ export default function GamePage() {
     };
   }, [gameId, playerId, searchParams]);
 
-  // --- MODIFIED: useEffect to handle the visible countdown ---
   useEffect(() => {
     if (roundResult && !isGameOver) {
-      setCountdown(3); // Start countdown from 3 seconds
+      setCountdown(3);
 
       const interval = setInterval(() => {
         setCountdown((prevCountdown) => {
@@ -121,12 +117,25 @@ export default function GamePage() {
   };
 
   const GameItem = ({ item, isBig = false, isCorrect = false }: { item: string; isBig?: boolean; isCorrect?: boolean }) => {
-    /* ... (This component remains unchanged) ... */
     const altText = item.split(".")[0];
     const isTextBased = gameType === "numbers" || gameType === "random_words";
 
+    // --- THIS IS THE ONLY PART THAT IS FIXED ---
     if (gameType === "emotions") {
-      return <Image src={`/${item}`} alt={altText} width={isBig ? 256 : 128} height={isBig ? 256 : 128} className={cn("rounded-xl object-cover", isBig && "shadow-lg border-4 border-white", isCorrect && "border-4 border-yellow-400")} />;
+      return (
+        <Image
+          src={`/${item}`}
+          alt={altText}
+          width={500} // Provide a base intrinsic width (Next.js needs this)
+          height={500} // Provide a base intrinsic height
+          className={cn(
+            // These classes control the ACTUAL displayed size and behavior
+            "w-full h-full object-contain",
+            isBig && "shadow-lg border-4 border-white rounded-xl",
+            isCorrect && "border-4 border-yellow-400"
+          )}
+        />
+      );
     }
 
     return (
@@ -136,7 +145,6 @@ export default function GamePage() {
     );
   };
 
-  // --- NEW: Reusable components for result and countdown ---
   const ResultIndicator = ({ result }: { result: "Correct" | "Wrong" }) => (
     <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-full flex justify-center items-center gap-2 animate-bounce">
       {result === "Correct" ? <CheckCircle className="w-8 h-8 text-green-500" /> : <XCircle className="w-8 h-8 text-red-500" />}
@@ -163,16 +171,14 @@ export default function GamePage() {
       );
     }
 
-    // --- DELETED: The entire 'if (roundResult)' block is gone ---
-
     if (myRole === "sender") {
       return (
-        // --- MODIFIED: Added relative positioning for indicators ---
         <div className="relative text-center flex flex-col items-center">
           {roundResult && <ResultIndicator result={roundResult.result} />}
           <h2 className="text-2xl font-semibold mb-2">Transmit this item:</h2>
           <p className="text-muted-foreground mb-4">Focus and send this to your partner with your mind.</p>
-          {senderItem ? <GameItem item={senderItem} isBig /> : <div className="w-64 h-64 rounded-xl bg-gray-200 animate-pulse"></div>}
+          {/* The container below defines the space (256x256) */}
+          <div className="w-64 h-64 flex items-center justify-center">{senderItem ? <GameItem item={senderItem} isBig /> : <div className="w-64 h-64 rounded-xl bg-gray-200 animate-pulse"></div>}</div>
           {roundResult && countdown && <CountdownTimer count={countdown} />}
         </div>
       );
@@ -180,7 +186,6 @@ export default function GamePage() {
 
     if (myRole === "receiver") {
       return (
-        // --- MODIFIED: Added relative positioning for indicators ---
         <div className="relative text-center w-full max-w-md">
           {roundResult && <ResultIndicator result={roundResult.result} />}
           <h2 className="text-2xl font-semibold mb-2">Receive the item:</h2>
@@ -188,7 +193,8 @@ export default function GamePage() {
           <div className="grid grid-cols-2 gap-4">
             {receiverOptions.length > 0
               ? receiverOptions.map((item) => (
-                  <div key={item} role="button" tabIndex={0} onClick={() => handleReceiverGuess(item)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleReceiverGuess(item)} className={cn("h-32 flex justify-center items-center rounded-lg shadow-lg border-4 border-transparent transition-transform duration-200", canReceiverGuess && "hover:scale-105 hover:border-yellow-400 cursor-pointer", !canReceiverGuess && "opacity-50 pointer-events-none")}>
+                  // This container defines the space (128px high)
+                  <div key={item} role="button" tabIndex={0} onClick={() => handleReceiverGuess(item)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleReceiverGuess(item)} className={cn("h-32 p-2 flex justify-center items-center rounded-lg shadow-lg border-4 border-transparent transition-transform duration-200", canReceiverGuess && "hover:scale-105 hover:border-yellow-400 cursor-pointer", !canReceiverGuess && "opacity-50 pointer-events-none")}>
                     <GameItem item={item} />
                   </div>
                 ))
@@ -238,7 +244,6 @@ export default function GamePage() {
         </div>
         <Progress value={round * 10} className="w-full" />
       </header>
-      {/* --- MODIFIED: Added extra vertical padding for the new indicators --- */}
       <div className="flex-grow flex items-center justify-center py-16">{renderContent()}</div>
     </main>
   );
