@@ -288,8 +288,8 @@ export default function Home() {
                             ))}
                           </InputOTPGroup>
                         </InputOTP>
-                        <Button onClick={handleJoinAndInitiate} className="w-full mt-2" disabled={roomCodeToJoin.length < 6}>
-                          Join & Start
+                        <Button onClick={handleJoinAndInitiate} className="w-full min-h-20 mt-2 text-3xl" disabled={roomCodeToJoin.length < 6}>
+                          Start Game
                         </Button>
                       </div>
                     )}
