@@ -3,9 +3,12 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Image from "next/image";
-import { CheckCircle, XCircle } from "lucide-react";
+
+// --- MODIFIED: Removed unused icons, added Timer ---
+import { CheckCircle, XCircle, Link, Link2Off, Check, X, Timer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 
 type RoundResult = { result: "Correct" | "Wrong"; pickedItem: string; correctItem: string };
@@ -15,6 +18,7 @@ export default function GamePage() {
   const searchParams = useSearchParams();
   const socketRef = useRef<WebSocket | null>(null);
   const [gameStatus, setGameStatus] = useState("Connecting...");
+  const [isConnected, setIsConnected] = useState(false);
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
   const [senderItem, setSenderItem] = useState<string | null>(null);
@@ -23,12 +27,13 @@ export default function GamePage() {
   const [roundResult, setRoundResult] = useState<RoundResult | null>(null);
   const [isGameOver, setIsGameOver] = useState(false);
   const [finalScore, setFinalScore] = useState(0);
+  // --- NEW: State for the countdown timer ---
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const gameId = useMemo(() => params.gameId as string, [params.gameId]);
   const myRole = useMemo(() => searchParams.get("role") as "sender" | "receiver", [searchParams]);
   const playerId = useMemo(() => searchParams.get("playerId"), [searchParams]);
   const gameType = useMemo(() => searchParams.get("gameType") || "colors", [searchParams]);
-  const gameTitle = useMemo(() => gameType.replace("_", " ").toUpperCase(), [gameType]);
 
   useEffect(() => {
     if (!gameId || !playerId) return;
@@ -37,6 +42,7 @@ export default function GamePage() {
     socketRef.current = socket;
     socket.onopen = () => {
       setGameStatus("Waiting for other player...");
+      setIsConnected(true);
       socket.send(JSON.stringify({ type: "PLAYER_READY", payload: { playerId } }));
     };
     socket.onmessage = (event) => {
@@ -44,10 +50,12 @@ export default function GamePage() {
       const currentRole = searchParams.get("role");
       switch (type) {
         case "NEW_ROUND":
-          setGameStatus(`Round ${payload.round}`);
+          setGameStatus("");
           setRound(payload.round);
           setScore(payload.score);
           setRoundResult(null);
+          // --- MODIFIED: Reset countdown for the new round ---
+          setCountdown(null);
           if (currentRole === "sender" && payload.sender) setSenderItem(payload.sender.correctItem);
           if (currentRole === "receiver" && payload.receiver) {
             setReceiverOptions(payload.receiver.options);
@@ -71,12 +79,14 @@ export default function GamePage() {
       }
     };
     socket.onclose = () => {
+      setIsConnected(false);
       setIsGameOver((prev) => {
         if (!prev) setGameStatus("Connection lost.");
         return true;
       });
     };
     socket.onerror = () => {
+      setIsConnected(false);
       setGameStatus("Connection Error!");
     };
     return () => {
@@ -84,12 +94,23 @@ export default function GamePage() {
     };
   }, [gameId, playerId, searchParams]);
 
+  // --- MODIFIED: useEffect to handle the visible countdown ---
   useEffect(() => {
     if (roundResult && !isGameOver) {
-      const timer = setTimeout(() => {
-        socketRef.current?.send(JSON.stringify({ type: "REQUEST_NEXT_ROUND" }));
-      }, 2000);
-      return () => clearTimeout(timer);
+      setCountdown(3); // Start countdown from 3 seconds
+
+      const interval = setInterval(() => {
+        setCountdown((prevCountdown) => {
+          if (prevCountdown === null || prevCountdown <= 1) {
+            clearInterval(interval);
+            socketRef.current?.send(JSON.stringify({ type: "REQUEST_NEXT_ROUND" }));
+            return null;
+          }
+          return prevCountdown - 1;
+        });
+      }, 1000);
+
+      return () => clearInterval(interval);
     }
   }, [roundResult, isGameOver]);
 
@@ -99,8 +120,8 @@ export default function GamePage() {
     socketRef.current.send(JSON.stringify({ type: "SUBMIT_GUESS", payload: { item } }));
   };
 
-  // --- MODIFIED: GameItem component now handles rendering text ---
   const GameItem = ({ item, isBig = false, isCorrect = false }: { item: string; isBig?: boolean; isCorrect?: boolean }) => {
+    /* ... (This component remains unchanged) ... */
     const altText = item.split(".")[0];
     const isTextBased = gameType === "numbers" || gameType === "random_words";
 
@@ -109,19 +130,26 @@ export default function GamePage() {
     }
 
     return (
-      <div
-        className={cn(
-          isBig ? "w-64 h-64" : "w-full h-full", // Receiver options fill their container
-          "rounded-lg mx-auto flex items-center justify-center p-2",
-          isCorrect ? "border-4 border-yellow-400" : isBig ? "border-4 border-white" : "",
-          isTextBased ? "bg-white/80" : ""
-        )}
-        style={{ backgroundColor: gameType === "colors" ? item : undefined }}
-      >
+      <div className={cn(isBig ? "w-64 h-64" : "w-full h-full", "rounded-lg mx-auto flex items-center justify-center p-2", isCorrect ? "border-4 border-yellow-400" : isBig ? "border-4 border-white" : "", isTextBased ? "bg-white/80" : "")} style={{ backgroundColor: gameType === "colors" ? item : undefined }}>
         {isTextBased && <span className={cn("font-bold text-center", isBig ? "text-6xl" : "text-3xl")}>{item}</span>}
       </div>
     );
   };
+
+  // --- NEW: Reusable components for result and countdown ---
+  const ResultIndicator = ({ result }: { result: "Correct" | "Wrong" }) => (
+    <div className="absolute -top-14 left-1/2 -translate-x-1/2 w-full flex justify-center items-center gap-2 animate-bounce">
+      {result === "Correct" ? <CheckCircle className="w-8 h-8 text-green-500" /> : <XCircle className="w-8 h-8 text-red-500" />}
+      <h2 className={`text-3xl font-bold ${result === "Correct" ? "text-green-600" : "text-red-600"}`}>{result}!</h2>
+    </div>
+  );
+
+  const CountdownTimer = ({ count }: { count: number | null }) => (
+    <div className="absolute -bottom-14 left-1/2 -translate-x-1/2 w-full flex justify-center items-center gap-2 text-muted-foreground">
+      <Timer className="w-5 h-5" />
+      <p className="text-lg font-medium">Next round in {count}...</p>
+    </div>
+  );
 
   const renderContent = () => {
     if (isGameOver) {
@@ -135,41 +163,26 @@ export default function GamePage() {
       );
     }
 
-    if (roundResult) {
-      return (
-        <div className="text-center w-full max-w-md animate-pulse">
-          {roundResult.result === "Correct" ? <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" /> : <XCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />}
-          <h2 className="text-4xl font-bold mb-4">{roundResult.result}!</h2>
-          {myRole === "receiver" ? <p>You picked:</p> : <p>Your partner picked:</p>}
-          <div className={cn(gameType === "emotions" ? "w-32 h-32" : "w-24 h-24", "mx-auto")}>
-            <GameItem item={roundResult.pickedItem} />
-          </div>
-
-          {roundResult.result === "Wrong" && (
-            <>
-              <p className="mt-4">The correct item was:</p>
-              <div className={cn(gameType === "emotions" ? "w-32 h-32" : "w-24 h-24", "mx-auto")}>
-                <GameItem item={roundResult.correctItem} isCorrect />
-              </div>
-            </>
-          )}
-        </div>
-      );
-    }
+    // --- DELETED: The entire 'if (roundResult)' block is gone ---
 
     if (myRole === "sender") {
       return (
-        <div className="text-center">
+        // --- MODIFIED: Added relative positioning for indicators ---
+        <div className="relative text-center flex flex-col items-center">
+          {roundResult && <ResultIndicator result={roundResult.result} />}
           <h2 className="text-2xl font-semibold mb-2">Transmit this item:</h2>
           <p className="text-muted-foreground mb-4">Focus and send this to your partner with your mind.</p>
           {senderItem ? <GameItem item={senderItem} isBig /> : <div className="w-64 h-64 rounded-xl bg-gray-200 animate-pulse"></div>}
+          {roundResult && countdown && <CountdownTimer count={countdown} />}
         </div>
       );
     }
 
     if (myRole === "receiver") {
       return (
-        <div className="text-center w-full max-w-md">
+        // --- MODIFIED: Added relative positioning for indicators ---
+        <div className="relative text-center w-full max-w-md">
+          {roundResult && <ResultIndicator result={roundResult.result} />}
           <h2 className="text-2xl font-semibold mb-2">Receive the item:</h2>
           <p className="text-muted-foreground mb-4">Which item is your partner thinking of?</p>
           <div className="grid grid-cols-2 gap-4">
@@ -183,32 +196,50 @@ export default function GamePage() {
                   .fill(0)
                   .map((_, i) => <div key={i} className="h-32 rounded-lg bg-gray-200 animate-pulse"></div>)}
           </div>
+          {roundResult && countdown && <CountdownTimer count={countdown} />}
         </div>
       );
     }
-    return <p>Loading game...</p>;
+
+    return <p className="font-semibold text-lg animate-pulse">{gameStatus}</p>;
+  };
+
+  const ConnectionStatus = () => {
+    /* ... (Unchanged) ... */
+    if (isConnected) {
+      return (
+        <div className="flex items-center justify-center gap-2 text-white bg-black px-2 rounded-3xl">
+          <Link size={16} />
+          <div className="w-[50%] rounded-4xl h-[80%] flex justify-center items-center bg-green-800">
+            <Check size={16} />
+          </div>
+        </div>
+      );
+    }
+    return (
+      <div className="flex items-center justify-center gap-2 text-white bg-black px-2 rounded-3xl">
+        <Link2Off size={16} />
+        <div className="w-[50%] rounded-4xl h-[80%] flex justify-center items-center bg-red-800">
+          <X size={16} />
+        </div>
+      </div>
+    );
   };
 
   return (
     <main className="min-h-screen flex flex-col bg-amber-50 p-4">
-      <header className="w-full max-w-4xl mx-auto">
-        <Card>
-          <CardContent className="flex justify-between items-center p-4">
-            <div className="text-left">
-              <h1 className="font-bold text-xl">{gameTitle}</h1>
-              <p className="text-sm text-muted-foreground capitalize">Role: {myRole}</p>
-            </div>
-            <div className="text-center">
-              <p className="font-semibold text-lg">{gameStatus}</p>
-            </div>
-            <div className="text-right">
-              <p className="font-bold text-xl">Score: {score}</p>
-              <p className="text-sm text-muted-foreground">Round: {round > 10 ? 10 : round} / 10</p>
-            </div>
-          </CardContent>
-        </Card>
+      <header className="w-full max-w-2xl mx-auto flex flex-col items-center gap-1 mb-8">
+        <div className="text-left w-1/4"></div>
+        <div className="flex justify-between gap-1.5 mb-1 w-[100%]">
+          <div>
+            <span className="text-sm font-bold text-primary">{Math.min(round, 10)} / 10</span>
+          </div>
+          <ConnectionStatus />
+        </div>
+        <Progress value={round * 10} className="w-full" />
       </header>
-      <div className="flex-grow flex items-center justify-center">{renderContent()}</div>
+      {/* --- MODIFIED: Added extra vertical padding for the new indicators --- */}
+      <div className="flex-grow flex items-center justify-center py-16">{renderContent()}</div>
     </main>
   );
 }
