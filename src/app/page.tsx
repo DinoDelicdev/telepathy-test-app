@@ -152,8 +152,8 @@ export default function Home() {
                   </InputOTPGroup>
                 </InputOTP>
                 <DrawerClose asChild>
-                  <Button onClick={handleSimpleJoin} className="w-full" disabled={roomCodeToJoin.length < 6}>
-                    Proceed To Friend's Room
+                  <Button onClick={handleSimpleJoin} className="w-full min-h-12 text-xl bg-[#EE1952]" disabled={roomCodeToJoin.length < 6}>
+                    Connect
                   </Button>
                 </DrawerClose>
               </div>
@@ -368,7 +368,7 @@ export default function Home() {
                         Receiver
                       </ToggleGroupItem>
                     </ToggleGroup>
-                    <Button onClick={handleStartGame} className="w-full mt-4" disabled={!selectedRole}>
+                    <Button onClick={handleStartGame} className="w-full min-h-20 mt-2 text-3xl" disabled={!selectedRole}>
                       Start Game
                     </Button>
                   </div>
