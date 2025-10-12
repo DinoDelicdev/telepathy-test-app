@@ -20,13 +20,15 @@ type GameType = {
   text?: string;
   title: string;
   desc: string;
+  subtitle: string;
+  listForDrawer: string[];
 };
 const gameTypes: GameType[] = [
-  { key: "emotions", image: "/dog.png", title: "EMOTIONS", desc: "Guess the right character" },
-  { key: "places", image: "/places.png", title: "PLACES", desc: "Pick the right place" },
-  { key: "colors", color: "bg-pink-300", title: "COLORS", desc: "Pick the right color" },
-  { key: "random_words", color: "bg-blue-200", text: "FOX", title: "RANDOM WORDS", desc: "Guess the random word" },
-  { key: "numbers", color: "bg-green-200", text: "42", title: "NUMBERS", desc: "Guess the secret number" },
+  { key: "emotions", image: "/dog.png", title: "EMOTIONS", desc: "Pick the right character.", subtitle: "Select 1 of 4 characters. 10 tries per round.", listForDrawer: ["/dog.png", "/elephant.png", "/fox.png", "/turtle.png", "/cameleon.png", "/octopus.png"] },
+  // { key: "places", image: "/places.png", title: "PLACES", desc: "Pick the right place", subtitle: "Select 1 of 4 places. 10 tryes per round.", listForDrawer: ["/dog.png", "/elephant.png", "/fox.png", "/turtle.png", "/cameleon.png", "/octopus.png"] },
+  { key: "colors", color: "bg-pink-300", title: "COLORS", desc: "Pick the right color", subtitle: "Select 1 of 4 colors. 10 tries per round.", listForDrawer: ["blue", "red", "yellow", "green", "orange", "purple"] },
+  { key: "random_words", color: "bg-blue-200", text: "FOX", title: "RANDOM WORDS", desc: "Guess the random word", subtitle: "Select 1 of 4 words. 10 tries per round.", listForDrawer: ["dog", "home", "love", "cat", "train", "car"] },
+  { key: "numbers", color: "bg-green-200", text: "42", title: "NUMBERS", desc: "Guess the secret number", subtitle: "Select 1 of 4 numbers. 10 tries per round.", listForDrawer: ["7", "5", "12", "18", "21", "1"] },
 ];
 
 export default function Home() {
@@ -143,9 +145,9 @@ export default function Home() {
               </DrawerHeader>
               <div className="p-4 flex flex-col items-center gap-4">
                 <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={roomCodeToJoin} onChange={setRoomCodeToJoin}>
-                  <InputOTPGroup>
+                  <InputOTPGroup className="gap-2">
                     {[...Array(6)].map((_, i) => (
-                      <InputOTPSlot key={i} index={i} />
+                      <InputOTPSlot key={i} index={i} className="rounded-md text-white font-bold bg-black" />
                     ))}
                   </InputOTPGroup>
                 </InputOTP>
@@ -206,32 +208,83 @@ export default function Home() {
               (playerCount < 2 && currentRoomId === myInitialRoomId ? (
                 <>
                   <DrawerHeader>
-                    <DrawerTitle>{selectedGameType.title}</DrawerTitle>
-                    <DrawerDescription>Select a role, then enter your friend's code to join and start.</DrawerDescription>
+                    <DrawerTitle className="text-2xl">{selectedGameType.title}</DrawerTitle>
+                    <DrawerDescription className="text-xl">{selectedGameType.subtitle}</DrawerDescription>
+                    <div className="w-[95%] h-16  self-center flex gap-1.5 justify-center items-center">
+                      {selectedGameType.listForDrawer.map((src) => {
+                        return (
+                          <div className="w-[15%] h-[90%] flex items-center" key={src}>
+                            {selectedGameType.title === "EMOTIONS" ? <Image src={src} alt={src} width={100} height={100} className="rounded-md object-cover"></Image> : ""}
+                            {selectedGameType.title === "COLORS" ? <div className="rounded-md w-[100%] h-[90%]" style={{ backgroundColor: src }}></div> : ""}
+                            {selectedGameType.title === "RANDOM WORDS" ? (
+                              <div className="rounded-md w-[100%] h-[90%] bg-blue-200 flex justify-center items-center p-2">
+                                <p className="font-bold text-blue-950">{src.toUpperCase()}</p>
+                              </div>
+                            ) : (
+                              ""
+                            )}
+                            {selectedGameType.title === "NUMBERS" ? (
+                              <div className="rounded-md w-[100%] h-[90%] bg-green-200 flex justify-center items-center">
+                                <p className="font-bold text-blue-950">{src}</p>
+                              </div>
+                            ) : (
+                              ""
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </DrawerHeader>
-                  <div className="p-4 flex flex-col gap-4">
+                  <div className="p-4 flex flex-col gap-4 self-center items-center">
+                    <p>Start as:</p>
                     <ToggleGroup
                       type="single"
                       value={selectedRole || ""}
                       onValueChange={(role) => {
                         if (role) setSelectedRole(role as "sender" | "receiver");
                       }}
-                      className="grid grid-cols-2 gap-2"
+                      className="grid grid-cols-2 gap-2 bg-gray-300 px-1 py-1 w-[70%]"
                     >
-                      <ToggleGroupItem value="sender" aria-label="Select Sender" className="h-12 text-base flex gap-2">
-                        <Send size={18} /> Sender
+                      <ToggleGroupItem
+                        value="sender"
+                        aria-label="Select Sender"
+                        className="h-12 text-base flex gap-2 rounded-md
+                                 data-[state=on]:bg-[#515151] data-[state=on]:text-white
+                                 data-[state=off]:bg-gray-300 data-[state=off]:text-[#515151]"
+                      >
+                        {selectedRole === "sender" ? (
+                          <div className="bg-green-800 rounded-full p-1 flex items-center justify-center">
+                            <CheckIcon size={18} className="h-4 w-4 text-black" />
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                        Sender
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="receiver" aria-label="Select Receiver" className="h-12 text-base flex gap-2">
-                        <Ear size={18} /> Receiver
+                      <ToggleGroupItem
+                        value="receiver"
+                        aria-label="Select Receiver"
+                        className="h-12 text-base flex gap-2 rounded-md
+                                 data-[state=on]:bg-[#515151] data-[state=on]:text-white
+                                 data-[state=off]:bg-gray-300 data-[state=off]:text-[#515151]"
+                      >
+                        {selectedRole === "receiver" ? (
+                          <div className="bg-green-800 rounded-full p-1 flex items-center justify-center">
+                            <CheckIcon size={18} className="h-4 w-4 text-black" />
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                        Receiver
                       </ToggleGroupItem>
                     </ToggleGroup>
                     {selectedRole && (
                       <div className="flex flex-col items-center gap-2 pt-4 border-t">
                         <p className="text-sm font-medium">Enter Friend's Code:</p>
                         <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} value={roomCodeToJoin} onChange={setRoomCodeToJoin}>
-                          <InputOTPGroup>
+                          <InputOTPGroup className="gap-2">
                             {[...Array(6)].map((_, i) => (
-                              <InputOTPSlot key={i} index={i} />
+                              <InputOTPSlot key={i} index={i} className="bg-black text-white font-bold rounded-md" />
                             ))}
                           </InputOTPGroup>
                         </InputOTP>
@@ -245,23 +298,74 @@ export default function Home() {
               ) : (
                 <>
                   <DrawerHeader>
-                    <DrawerTitle>{selectedGameType.title}</DrawerTitle>
-                    <DrawerDescription>You're connected! Select a role and start the game.</DrawerDescription>
+                    <DrawerTitle className="text-2xl">{selectedGameType.title}</DrawerTitle>
+                    <DrawerDescription className="text-xl">{selectedGameType.subtitle}</DrawerDescription>
+                    <div className="w-[95%] h-16  self-center flex gap-1.5 justify-center items-center">
+                      {selectedGameType.listForDrawer.map((src) => {
+                        return (
+                          <div className="w-[15%] h-[90%] flex items-center" key={src}>
+                            {selectedGameType.title === "EMOTIONS" ? <Image src={src} alt={src} width={100} height={100} className="rounded-md object-cover"></Image> : ""}
+                            {selectedGameType.title === "COLORS" ? <div className="rounded-md w-[100%] h-[90%]" style={{ backgroundColor: src }}></div> : ""}
+                            {selectedGameType.title === "RANDOM WORDS" ? (
+                              <div className="rounded-md w-[100%] h-[90%] bg-blue-200 flex justify-center items-center">
+                                <p className="font-bold text-blue-950">{src.toUpperCase()}</p>
+                              </div>
+                            ) : (
+                              ""
+                            )}
+                            {selectedGameType.title === "NUMBERS" ? (
+                              <div className="rounded-md w-[100%] h-[90%] bg-green-200 flex justify-center items-center">
+                                <p className="font-bold text-blue-950">{src}</p>
+                              </div>
+                            ) : (
+                              ""
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </DrawerHeader>
-                  <div className="p-4 flex flex-col gap-4">
+                  <div className="p-4 flex flex-col gap-4 items-center">
+                    <p>Start as:</p>
                     <ToggleGroup
                       type="single"
                       value={selectedRole || ""}
                       onValueChange={(role) => {
                         if (role) setSelectedRole(role as "sender" | "receiver");
                       }}
-                      className="grid grid-cols-2 gap-2"
+                      className="grid grid-cols-2 gap-2 bg-gray-300 px-1 py-1 w-[70%]"
                     >
-                      <ToggleGroupItem value="sender" aria-label="Select Sender" className="h-12 text-base flex gap-2">
-                        <Send size={18} /> Sender
+                      <ToggleGroupItem
+                        value="sender"
+                        aria-label="Select Sender"
+                        className="h-12 text-base flex gap-2 rounded-md
+                                 data-[state=on]:bg-[#515151] data-[state=on]:text-white
+                                 data-[state=off]:bg-gray-300 data-[state=off]:text-[#515151]"
+                      >
+                        {selectedRole === "sender" ? (
+                          <div className="bg-green-800 rounded-full p-1 flex items-center justify-center">
+                            <CheckIcon size={18} className="h-4 w-4 text-black" />
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                        Sender
                       </ToggleGroupItem>
-                      <ToggleGroupItem value="receiver" aria-label="Select Receiver" className="h-12 text-base flex gap-2">
-                        <Ear size={18} /> Receiver
+                      <ToggleGroupItem
+                        value="receiver"
+                        aria-label="Select Receiver"
+                        className="h-12 text-base flex gap-2 rounded-md
+                                 data-[state=on]:bg-[#515151] data-[state=on]:text-white
+                                 data-[state=off]:bg-gray-300 data-[state=off]:text-[#515151]"
+                      >
+                        {selectedRole === "receiver" ? (
+                          <div className="bg-green-800 rounded-full p-1 flex items-center justify-center">
+                            <CheckIcon size={18} className="h-4 w-4 text-black" />
+                          </div>
+                        ) : (
+                          ""
+                        )}
+                        Receiver
                       </ToggleGroupItem>
                     </ToggleGroup>
                     <Button onClick={handleStartGame} className="w-full mt-4" disabled={!selectedRole}>
