@@ -38,7 +38,7 @@ export default function Home() {
   const [socket, setSocket] = useState<WebSocket | null>(null);
   const [playerCount, setPlayerCount] = useState(0);
   const [selectedGameType, setSelectedGameType] = useState<GameType | null>(null);
-  const [selectedRole, setSelectedRole] = useState<"sender" | "receiver" | null>(null);
+  const [selectedRole, setSelectedRole] = useState<"sender" | "receiver">("sender");
   const [roomCodeToJoin, setRoomCodeToJoin] = useState("");
   const [isGameSelectionOpen, setIsGameSelectionOpen] = useState(false);
   const pendingActionRef = useRef<any | null>(null);
@@ -180,7 +180,7 @@ export default function Home() {
               className="p-3 text-center bg-white/60 w-full cursor-pointer hover:bg-white/90 transition-colors"
               onClick={() => {
                 setSelectedGameType(type);
-                setSelectedRole(null);
+                setSelectedRole("sender");
                 setRoomCodeToJoin("");
                 setIsGameSelectionOpen(true);
               }}

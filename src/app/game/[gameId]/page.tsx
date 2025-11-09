@@ -175,8 +175,8 @@ export default function GamePage() {
       return (
         <div className="relative text-center flex flex-col items-center">
           {roundResult && <ResultIndicator result={roundResult.result} />}
-          <h2 className="text-2xl font-semibold mb-2">Transmit this item:</h2>
-          <p className="text-muted-foreground mb-4">Focus and send this to your partner with your mind.</p>
+          <h2 className="text-2xl font-semibold mb-2">Send telepathically:</h2>
+          <p className="text-muted-foreground mb-4">Waiting on your partner to make a selection.</p>
           {/* The container below defines the space (256x256) */}
           <div className="w-64 h-64 flex items-center justify-center">{senderItem ? <GameItem item={senderItem} isBig /> : <div className="w-64 h-64 rounded-xl bg-gray-200 animate-pulse"></div>}</div>
           {roundResult && countdown && <CountdownTimer count={countdown} />}
@@ -188,8 +188,8 @@ export default function GamePage() {
       return (
         <div className="relative text-center w-full max-w-md">
           {roundResult && <ResultIndicator result={roundResult.result} />}
-          <h2 className="text-2xl font-semibold mb-2">Receive the item:</h2>
-          <p className="text-muted-foreground mb-4">Which item is your partner thinking of?</p>
+          <h2 className="text-2xl font-semibold mb-2">Receiver:</h2>
+          <p className="text-muted-foreground mb-4">Which of these is your partner thinking of?</p>
           <div className="grid grid-cols-2 gap-4">
             {receiverOptions.length > 0
               ? receiverOptions.map((item) => (
