@@ -20,6 +20,7 @@ export default function GamePage() {
   const [isConnected, setIsConnected] = useState(false);
   const [round, setRound] = useState(0);
   const [score, setScore] = useState(0);
+  const [revealed, setRevealed] = useState(false);
   const [senderItem, setSenderItem] = useState<string | null>(null);
   const [receiverOptions, setReceiverOptions] = useState<string[]>([]);
   const [canReceiverGuess, setCanReceiverGuess] = useState(false);
@@ -51,6 +52,7 @@ export default function GamePage() {
           setGameStatus("");
           setRound(payload.round);
           setScore(payload.score);
+          setRevealed(false);
           setRoundResult(null);
           setCountdown(null);
           if (currentRole === "sender" && payload.sender) setSenderItem(payload.sender.correctItem);
@@ -190,18 +192,30 @@ export default function GamePage() {
           {roundResult && <ResultIndicator result={roundResult.result} />}
           <h2 className="text-2xl font-semibold mb-2">Receiver:</h2>
           <p className="text-muted-foreground mb-4">Which of these is your partner thinking of?</p>
-          <div className="grid grid-cols-2 gap-4">
-            {receiverOptions.length > 0
-              ? receiverOptions.map((item) => (
-                  // This container defines the space (128px high)
-                  <div key={item} role="button" tabIndex={0} onClick={() => handleReceiverGuess(item)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleReceiverGuess(item)} className={cn("h-32 p-2 flex justify-center items-center rounded-lg shadow-lg border-4 border-transparent transition-transform duration-200", canReceiverGuess && "hover:scale-105 hover:border-yellow-400 cursor-pointer", !canReceiverGuess && "opacity-50 pointer-events-none")}>
-                    <GameItem item={item} />
-                  </div>
-                ))
-              : Array(4)
-                  .fill(0)
-                  .map((_, i) => <div key={i} className="h-32 rounded-lg bg-gray-200 animate-pulse"></div>)}
-          </div>
+          {revealed ? (
+            <div className="grid grid-cols-2 gap-4">
+              {receiverOptions.length > 0
+                ? receiverOptions.map((item) => (
+                    // This container defines the space (128px high)
+                    <div key={item} role="button" tabIndex={0} onClick={() => handleReceiverGuess(item)} onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && handleReceiverGuess(item)} className={cn("h-32 p-2 flex justify-center items-center rounded-lg shadow-lg border-4 border-transparent transition-transform duration-200", canReceiverGuess && "hover:scale-105 hover:border-yellow-400 cursor-pointer", !canReceiverGuess && "opacity-50 pointer-events-none")}>
+                      <GameItem item={item} />
+                    </div>
+                  ))
+                : Array(4)
+                    .fill(0)
+                    .map((_, i) => <div key={i} className="h-32 rounded-lg bg-gray-200 animate-pulse"></div>)}
+            </div>
+          ) : (
+            <div>
+              <Button
+                onClick={() => {
+                  setRevealed(true);
+                }}
+              >
+                REVEAL CHOICES
+              </Button>
+            </div>
+          )}
           {roundResult && countdown && <CountdownTimer count={countdown} />}
         </div>
       );
